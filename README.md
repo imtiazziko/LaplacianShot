@@ -1,34 +1,26 @@
-# SimpleShot: Revisiting Nearest-Neighbor Classification for Few-Shot Learning
+# Laplacian few shot learning
 
-This repository contains the code for SimpleShot introduced in the following paper
+This repository contains the code for Laplacian few shot learning. This code is based on the SimpleShot github [https://github.com/mileyan/simple_shot](https://github.com/mileyan/simple_shot)
 
-[SimpleShot: Revisiting Nearest-Neighbor Classification for Few-Shot Learning](https://arxiv.org/abs/1911.04623)
+[Laplacian few shot learning]()
 
-by [Yan Wang](https://www.cs.cornell.edu/~yanwang/), [Wei-Lun Chao](http://www-scf.usc.edu/~weilunc/), [Kilian Q. Weinberger](http://kilian.cs.cornell.edu/), [Laurens van der Maaten
-](https://lvdmaaten.github.io/)
+by Imtiaz Masud Ziko and Ismail Ben Ayed
 
 ## Citation
 If you find Simple Shot useful in your research, please consider citing:
 ```angular2
-@article{wang2019simpleshot,
-  title={SimpleShot: Revisiting Nearest-Neighbor Classification for Few-Shot Learning},
-  author={Wang, Yan and Chao, Wei-Lun and Weinberger, Kilian Q.  and van der Maaten, Laurens},
-  journal={arXiv preprint arXiv:1911.04623},
+@article{ziko2019,
+  title={Laplacian few shot learning},
+  author={Imtiaz Ziko and Ismail Ben Ayed},
+  journal={arXiv preprint },
   year={2019}
 }
 ```
 
 ## Introduction
-Few-shot learners aim to recognize new object classes 
-based on a small number of labeled training examples. 
-To prevent overfitting, state-of-the-art few-shot learners 
-use meta-learning on convolutional-network features and perform
-classification using a nearest-neighbor classifier. This paper
-studies the accuracy of nearest-neighbor baselines without meta-learning. 
-Surprisingly, we find simple feature transformations suffice to obtain
-competitive few-shot learning accuracies. For example, we find that
-a nearest-neighbor classifier used in combination with mean-subtraction
-and L2-normalization outperforms prior results in three out of five settings
+Recent SimpleShot paper showed simple feature transformations suffice to obtain
+competitive few-shot learning accuracies using simple nearest-neighbor rules in combination with mean-subtraction
+and L2-normalization and outperforms prior results in three out of five settings
 on the miniImageNet dataset.
 
 ## Usage

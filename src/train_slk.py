@@ -6,10 +6,10 @@ import time
 import warnings
 import collections
 import pickle
-# from sklearn.metrics import accuracy_score
-# import numpy as np
+from sklearn.metrics import accuracy_score
+import numpy as np
 # from sklearn.utils import linear_assignment_
-# from scipy.optimize import linear_sum_assignment
+from scipy.optimize import linear_sum_assignment
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
@@ -21,25 +21,25 @@ import torch.utils.data.distributed
 from torch.optim.lr_scheduler import MultiStepLR, StepLR, CosineAnnealingLR
 import tqdm
 from utils import configuration
-# from slk_update import bound_update
+from slk_update import bound_update
 from numpy import linalg as LA
 from scipy.stats import mode
 import pdb
 import datasets
 import models
-# from scipy import sparse
+from scipy import sparse
 from pyflann import *
-# import timeit
-# from sklearn.neighbors import NearestNeighbors
+import timeit
+from sklearn.neighbors import NearestNeighbors
 best_prec1 = -1
 
 
 def main():
     global args, best_prec1
     args = configuration.parser_args()
-
+    # breakpoint()
     ### initial logger
-    log = setup_logger(args.save_path + '/training.log')
+    log = setup_logger(args.save_path + args.log_file)
     for key, value in sorted(vars(args).items()):
         log.info(str(key) + ': ' + str(value))
 
@@ -47,7 +47,7 @@ def main():
         random.seed(args.seed)
         torch.manual_seed(args.seed)
         cudnn.deterministic = True
-    # pdb.set_trace()
+    # breakpoint()
     # create model
     log.info("=> creating model '{}'".format(args.arch))
     model = models.__dict__[args.arch](num_classes=args.num_classes, remove_linear=args.do_meta_train)
@@ -541,64 +541,86 @@ def metric_class_type(gallery, query, train_label, test_label, shot, train_mean=
     out = out.astype(int)
     test_label = np.array(test_label)
     acc = (out == test_label).mean()
+    # breakpoint()
+    # with SLK
+    if args.slk:
+        knn = args.knn
+        lmd = args.lmd
+        # aff_path = './data/W_' + str(knn) + '_' + '.npz'
+        alg = None
+        # X = np.concatenate((gallery, query), axis=0)
+        X = query
+        W = create_affinity(X, knn, scale = None, alg = alg)
+        unary = distance.transpose()
+        l, C, mode_index, z, bound_E = bound_update(unary, X, W, lmd, 300, batch = False)
+        out = np.take(train_label, l)
+        # out = mode(nearest_samples, axis=0)[0]
+        # out = out.astype(int)
+        # acc = (out == test_label).mean()
+        acc, _ = get_accuracy(test_label, out)
     return acc
 
 
-# def create_affinity(X, knn, scale=None, alg="annoy", savepath=None, W_path=None):
-#     N, D = X.shape
-#     print('Compute Affinity ')
-#     start_time = timeit.default_timer()
-#     if alg == "flann":
-#         print('with Flann')
-#         flann = FLANN()
-#         knnind, dist = flann.nn(X, X, knn, algorithm="kdtree", target_precision=0.9, cores=5);
-#         # knnind = knnind[:,1:]
-#     else:
-#         nbrs = NearestNeighbors(n_neighbors=knn).fit(X)
-#         dist, knnind = nbrs.kneighbors(X)
-#
-#     row = np.repeat(range(N), knn - 1)
-#     col = knnind[:, 1:].flatten()
-#     if scale is None:
-#         data = np.ones(X.shape[0] * (knn - 1))
-#     else:
-#         data = np.exp((-dist[:, 1:] ** 2) / (2 * scale ** 2)).flatten()
-#
-#     W = sparse.csc_matrix((data, (row, col)), shape=(N, N), dtype=np.float)
-#     # W = (W + W.transpose(copy=True)) /2
-#     elapsed = timeit.default_timer() - start_time
-#     print(elapsed)
-#
-#     if isinstance(savepath, str):
-#         if savepath.endswith('.npz'):
-#             sparse.save_npz(savepath, W)
-#
-#     return W
-#
-# def get_accuracy(L1, L2):
-#     if L1.__len__() != L2.__len__():
-#         print('size(L1) must == size(L2)')
-#
-#     Label1 = np.unique(L1)
-#     nClass1 = Label1.__len__()
-#     Label2 = np.unique(L2)
-#     nClass2 = Label2.__len__()
-#
-#     nClass = max(nClass1, nClass2)
-#     G = np.zeros((nClass, nClass))
-#     for i in range(nClass1):
-#         for j in range(nClass2):
-#             G[i][j] = np.nonzero((L1 == Label1[i]) * (L2 == Label2[j]))[0].__len__()
-#
-#     # c = linear_assignment_.linear_assignment(-G.T)[:, 1]
-#     c = linear_sum_assignment(-G.T)[1]
-#     newL2 = np.zeros(L2.__len__())
-#     for i in range(nClass2):
-#         for j in np.nonzero(L2 == Label2[i])[0]:
-#             if len(Label1) > c[i]:
-#                 newL2[j] = Label1[c[i]]
-#
-#     return accuracy_score(L1, newL2),newL2
+def create_affinity(X, knn, scale=None, alg=None):
+    N, D = X.shape
+    # print('Compute Affinity ')
+    # breakpoint()
+    start_time = timeit.default_timer()
+    if alg == "flann":
+        print('with Flann')
+        flann = FLANN()
+        knnind, dist = flann.nn(X, X, knn, algorithm="kdtree", target_precision=0.9, cores=5);
+        # knnind = knnind[:,1:]
+    else:
+        nbrs = NearestNeighbors(n_neighbors=knn).fit(X)
+        dist, knnind = nbrs.kneighbors(X)
+
+    row = np.repeat(range(N), knn - 1)
+    col = knnind[:, 1:].flatten()
+    if scale is None:
+        data = np.ones(X.shape[0] * (knn - 1))
+    else:
+        if scale == True:
+            scale = np.clip(dist[:,1], a_min=0.5)
+            np.exp((-dist[:, 1:] ** 2) / (2 * np.expand_dims(scale, axis=1) ** 2))
+        else:
+            data = np.exp((-dist[:, 1:] ** 2) / (2 * scale ** 2)).flatten()
+
+    W = sparse.csc_matrix((data, (row, col)), shape=(N, N), dtype=np.float)
+    # W = (W + W.transpose(copy=True)) /2
+    # elapsed = timeit.default_timer() - start_time
+    # print(elapsed)
+
+    # if isinstance(savepath, str):
+    #     if savepath.endswith('.npz'):
+    #         sparse.save_npz(savepath, W)
+
+    return W
+
+def get_accuracy(L1, L2):
+    if L1.__len__() != L2.__len__():
+        print('size(L1) must == size(L2)')
+
+    Label1 = np.unique(L1)
+    nClass1 = Label1.__len__()
+    Label2 = np.unique(L2)
+    nClass2 = Label2.__len__()
+
+    nClass = max(nClass1, nClass2)
+    G = np.zeros((nClass, nClass))
+    for i in range(nClass1):
+        for j in range(nClass2):
+            G[i][j] = np.nonzero((L1 == Label1[i]) * (L2 == Label2[j]))[0].__len__()
+
+    # c = linear_assignment_.linear_assignment(-G.T)[:, 1]
+    c = linear_sum_assignment(-G.T)[1]
+    newL2 = np.zeros(L2.__len__())
+    for i in range(nClass2):
+        for j in np.nonzero(L2 == Label2[i])[0]:
+            if len(Label1) > c[i]:
+                newL2[j] = Label1[c[i]]
+
+    return accuracy_score(L1, newL2),newL2
 
 def sample_case(ld_dict, shot):
     sample_class = random.sample(list(ld_dict.keys()), args.meta_val_way)
@@ -621,6 +643,7 @@ def do_extract_and_evaluate(model, log):
     train_loader = get_dataloader('train', aug=False, shuffle=False, out_name=False)
     val_loader = get_dataloader('test', aug=False, shuffle=False, out_name=False)
     load_checkpoint(model, 'last')
+    # breakpoint()
     out_mean, fc_out_mean, out_dict, fc_out_dict = extract_feature(train_loader, val_loader, model, 'last')
     accuracy_info_shot1 = meta_evaluate(out_dict, out_mean, 1)
     accuracy_info_shot5 = meta_evaluate(out_dict, out_mean, 5)

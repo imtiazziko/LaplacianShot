@@ -21,8 +21,9 @@ def parser_args():
                         help='disable training augmentation')
     parser.add_argument('--disable-random-resize', action='store_true',
                         help='disable random resizing')
-    parser.add_argument('--enlarge', action='store_true',
-                        help='enlarge the image size then center crop')
+    # parser.add_argument('--enlarge', action='store_true',
+    #                     help='enlarge the image size then center crop')
+    parser.add_argument('--enlarge', default=True, type=bool, help='enlarge the image size then center crop')
     ### network setting
     parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                         help='network architecture')
@@ -78,7 +79,9 @@ def parser_args():
                         help='path to the folder stored split files.')
     parser.add_argument('--save-path', default='result/default', type=str,
                         help='path to folder stored the log and checkpoint')
-    parser.add_argument('--seed', default=None, type=int,
+    parser.add_argument('--log-file', default='/training.log', type=str,
+                        help='log-file')
+    parser.add_argument('--seed', default=1, type=int,
                         help='seed for initializing training. ')
     parser.add_argument('--disable-tqdm', action='store_true',
                         help='disable tqdm.')
@@ -94,4 +97,13 @@ def parser_args():
                         help='evaluate the final result')
     parser.add_argument('--pretrain', type=str, default=None,
                         help='path to the pretrained model, used for fine-tuning')
+
+    ## SLK
+
+    parser.add_argument('--lmd', default=-0.5, type=float,
+                        help='weight for laplacian in slk')
+    parser.add_argument('--knn', default=-10, type=int,
+                        help='knn for affinity')
+    parser.add_argument('--slk', action='store_true',
+                        help='enable slk.')
     return parser.parse_args()
