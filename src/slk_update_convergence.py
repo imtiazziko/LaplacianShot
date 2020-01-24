@@ -2,6 +2,7 @@
 """
 import os.path as osp
 import numpy as np
+import timeit
 import math
 import matplotlib
 matplotlib.use('Agg')
@@ -70,18 +71,21 @@ def plot_convergence(filename, E_list):
     plt.xticks(iter_range[1::2],(iter_range[1::2]+1))
     plt.xlabel('iterations')
     plt.ylabel(ylabel)
+    # plt.xlim(1, length+1)
     plt.savefig(filename, format='png', dpi=800, bbox_inches='tight')
     plt.show()
     plt.close('all')
 
 
-def bound_update(args, unary, kernel, bound_lambda, bound_iteration=20, batch=False):
+def bound_update(args, unary, X, kernel, bound_lambda, bound_iteration=20, batch=False):
     """
     """
+    start_time = timeit.default_timer()
+    # print("Inside Bound Update . . .")
     oldE = float('inf')
     Y = normalize(-unary)
     E_list = []
-    for i in range(bound_iteration):
+    for i in range(20):
         additive = -unary
         mul_kernel = kernel.dot(Y)
         Y = -bound_lambda * mul_kernel
@@ -90,16 +94,18 @@ def bound_update(args, unary, kernel, bound_lambda, bound_iteration=20, batch=Fa
         E = entropy_energy(Y, unary, kernel, bound_lambda, batch)
         E_list.append(E)
         # print('entropy_energy is ' +repr(E) + ' at iteration ',i)
-        if (i > 1 and (abs(E - oldE) <= 1e-6 * abs(oldE))):
-            # print('Converged')
-            break
+        # report_E = E
+        # if (i > 1 and (abs(E - oldE) <= 1e-5 * abs(oldE))):
+        #     # print('Converged')
+        #     break
+        #
+        # else:
+        #     oldE = E.copy();
+        #     report_E = E
 
-        else:
-            oldE = E.copy()
-
+    breakpoint()
     if args.plot_converge:
       filename = osp.join(args.save_path,'convergence_{}.png'.format(args.arch))
       plot_convergence(filename,E_list)
-
     l = np.argmax(Y, axis=1)
     return l

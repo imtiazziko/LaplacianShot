@@ -1,5 +1,5 @@
 import configargparse
-
+import argparse
 
 def parser_args():
     parser = configargparse.ArgParser(description='PyTorch ImageNet Training')
@@ -100,10 +100,24 @@ def parser_args():
 
     ## SLK
 
-    parser.add_argument('--lmd', default=-0.5, type=float,
+    parser.add_argument('--lmd', default=0.5, type=float,
                         help='weight for laplacian in slk')
-    parser.add_argument('--knn', default=-10, type=int,
+    parser.add_argument('--knn', default=3, type=int,
                         help='knn for affinity')
     parser.add_argument('--slk', action='store_true',
                         help='enable slk.')
+    parser.add_argument('--tune-lmd', default = False,  type=str2bool,
+                        help='Tune Lambda on Validation set.')
+    parser.add_argument('--plot-converge', default = False,  type=str2bool,
+                        help='plot the energy in each bound updates.')
     return parser.parse_args()
+
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
