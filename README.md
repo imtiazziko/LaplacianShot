@@ -70,8 +70,4 @@ To evaluate INat models,
 ```angular2
 python ./src/test_inatural.py -c ./configs/inatural/softmax/conv4.config --evaluate --enlarge
 ```
-## Contact
-If you have any question, please feel free to email us.
-
-Yan Wang (yw763@cornell.edu)
 
