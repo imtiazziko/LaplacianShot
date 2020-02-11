@@ -22,7 +22,13 @@ After downloading and unziping this dataset, you have to run the follow script t
 python src/utils/tieredImagenet.py --data path-to-tiered --split split/tiered/
 ```
 ### 2.3 iNat2017
-Please follow the instruction from https://github.com/daviswer/fewshotlocal to download the dataset.
+We follow the instruction from https://github.com/daviswer/fewshotlocal. Download and unpack the iNat2017 _Training and validation images_, and the _Training bounding box annotations_, to [data/iNat](./data/iNat) directory from [here](https://github.com/visipedia/inat_comp/blob/master/2017/README.md#Data).
+ Create the meta-iNat dataset by running:
+ ```angular2
+cd ./data/iNat
+python iNat_setup.py
+```
+
 And run the following script to generate split files.
 ```angular2
 python ./src/inatural_split.py --data path-to-inat/setup --split ./split/inatural/
