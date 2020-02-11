@@ -40,8 +40,8 @@ You can download the pretrained convolutional network models on base classes by 
 cd ./src
 python download_models.py
 ```
-
-You can run the following scripts to test -
+Alternatively to run the training on the base classes from scratch you can remove the "--evaluate" option in the following scripts.
+You can run the following scripts-
 
 for miniImageNet:
 ```angular2
