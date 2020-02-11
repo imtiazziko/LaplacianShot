@@ -1,27 +1,10 @@
-# Laplacian few shot learning
+# LaplacianShot for few shot learning
 
-This repository contains the code for Laplacian few shot learning. This code is based on the SimpleShot github [https://github.com/mileyan/simple_shot](https://github.com/mileyan/simple_shot)
+This repository contains the code for **LaplacianShot**. The code is based on the [SimpleShot github](https://github.com/mileyan/simple_shot)
 
-[Laplacian few shot learning]()
-
-by Imtiaz Masud Ziko and Ismail Ben Ayed
-
-## Citation
-If you find Simple Shot useful in your research, please consider citing:
-```angular2
-@article{ziko2019,
-  title={Laplacian few shot learning},
-  author={Imtiaz Ziko and Ismail Ben Ayed},
-  journal={arXiv preprint },
-  year={2019}
-}
-```
 
 ## Introduction
-Recent SimpleShot paper showed simple feature transformations suffice to obtain
-competitive few-shot learning accuracies using simple nearest-neighbor rules in combination with mean-subtraction
-and L2-normalization and outperforms prior results in three out of five settings
-on the miniImageNet dataset.
+We propose LaplacianShot for few-shot tasks, which integrates two types of potentials: (1) unary potentials assigning query samples to the nearest class prototype, and (2) pairwise Laplacian potentials encouraging nearby query samples to have consistent predictions. Our algorithm is performed during inference in few-shot scenarios, following the traditional training of a deep convolutional network on the base classes with the standard cross-entropy loss.
 
 ## Usage
 ### 1. Dependencies
@@ -46,28 +29,24 @@ python ./src/inatural_split.py --data path-to-inat/setup --split ./split/inatura
 ```
 
 ### 3 Train and Test
-You can download the pretrained models from:
-
-Google Drives: https://drive.google.com/open?id=14ZCz3l11ehCl8_E1P0YSbF__PK4SwcBZ
-
-BaiduYun: https://pan.baidu.com/s/1tC2IU1JBL5vPNmnxXMu2sA  code:d3j5
-
-Or, you can download them by running
+You can download the pretrained convolutional network models on base classes by running:
 ```angular2
 cd ./src
 python download_models.py
 ```
-This repo includes `Resnet-10/18/34/50`, `Densenet-121`, `Conv-4`, `WRN`, `MobileNet` models.
-For instance, If you would like to train a Conv-4 on Mini-ImageNet, you can run
+
+you can run the following scripts to test and run the code.
+
+In miniImageNet:
 ```angular2
-python ./src/train.py -c ./configs/mini/softmax/conv4.config
+sh run_mini.sh
 ```
-The evaluation command of mini/tiered-imagenet is
+In tieredImageNet
 ```angular2
-python ./src/train.py -c ./configs/mini/softmax/conv4.config --evaluate --enlarge
+sh run_tiered.sh
 ```
-To evaluate INat models,
+In iNat
 ```angular2
-python ./src/test_inatural.py -c ./configs/inatural/softmax/conv4.config --evaluate --enlarge
+sh run_iNat.sh
 ```
 
