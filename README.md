@@ -55,4 +55,4 @@ for meta-iNat:
 ```angular2
 sh run_iNat.sh
 ```
-
+The results are saved in the results/ folder in the specified log files.
