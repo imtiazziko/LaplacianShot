@@ -21,7 +21,8 @@ import tqdm
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import accuracy_score
 from scipy.optimize import linear_sum_assignment
-from slk_update import bound_update
+from sklearn.metrics.pairwise import euclidean_distances as ecdist
+from lshot_update import bound_update
 from utils import configuration
 from numpy import linalg as LA
 from scipy.stats import mode
@@ -417,46 +418,6 @@ def extract_feature(train_loader, query_loader, repr_loader, model, tag='last'):
         save_pickle(save_dir + '/output.plk', all_info)
         return all_info
 
-def extract_feature_tune(train_loader, val_loader, model, tag='best'):
-    # return out mean, fcout mean, out feature, fcout features
-    save_dir = '{}/{}'.format(args.save_path, tag)
-    if os.path.isfile(save_dir + '/output_tune.plk'):
-        data = load_pickle(save_dir + '/output_tune.plk')
-        return data
-    else:
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-
-    model.eval()
-    with torch.no_grad():
-        # get training mean
-        if not os.path.isfile(save_dir + '/output_mean.plk'):
-            out_mean, fc_out_mean = [], []
-            for i, (inputs, _) in enumerate(warp_tqdm(train_loader)):
-                outputs, fc_outputs = model(inputs, True)
-                out_mean.append(outputs.cpu().data.numpy())
-                if fc_outputs is not None:
-                    fc_out_mean.append(fc_outputs.cpu().data.numpy())
-            out_mean = np.concatenate(out_mean, axis=0).mean(0)
-            if len(fc_out_mean) > 0:
-                fc_out_mean = np.concatenate(fc_out_mean, axis=0).mean(0)
-            else:
-                fc_out_mean = -1
-            save_pickle(save_dir + '/output_mean.plk', [out_mean,fc_out_mean])
-        else:
-            out_mean = load_pickle(save_dir + '/output_mean.plk')[0]
-
-        output_dict = collections.defaultdict(list)
-        for i, (inputs, labels) in enumerate(warp_tqdm(val_loader)):
-            # compute output
-            outputs, _ = model(inputs, True)
-            outputs = outputs.cpu().data.numpy()
-            for out,label in zip(outputs, labels):
-                output_dict[label.item()].append(out)
-        all_info = [out_mean, output_dict]
-        save_pickle(save_dir + '/output_tune.plk', all_info)
-        return all_info
-
 def get_dataloader(split, aug=False, shuffle=True, out_name=False, sample=None):
     # sample: iter, way, shot, query
     if aug:
@@ -511,60 +472,6 @@ def meta_evaluate(query_data, repr_data, train_mean):
                                             norm_type='UN')
     return cl2n_acc, cl2n_mean_acc, l2n_acc, l2n_mean_acc, un_acc, un_mean_acc
 
-def meta_evaluate_tune(data, train_mean, shot):
-    l2n_list = []
-    for _ in warp_tqdm(range(args.meta_val_iter)):
-        train_data, test_data, train_label, test_label = sample_case(data, shot)
-        acc = metric_val_tune(train_data, test_data, train_label, test_label, shot, train_mean=train_mean,
-                                norm_type='L2N')
-        l2n_list.append(acc)
-    l2n_mean= np.array(l2n_list).mean()
-    return l2n_mean
-
-def sample_case(ld_dict, shot):
-    # Sample meta task
-    sample_class = random.sample(list(ld_dict.keys()), args.meta_val_way)
-    train_input = []
-    test_input = []
-    test_label = []
-    train_label = []
-    for each_class in sample_class:
-        total_samples = shot + args.meta_val_query
-        if len(ld_dict[each_class]) < total_samples:
-            total_samples = len(ld_dict[each_class])
-
-        samples = random.sample(ld_dict[each_class], total_samples)
-        train_label += [each_class] * len(samples[:shot])
-        test_label += [each_class] * len(samples[shot:])
-        train_input += samples[:shot]
-        test_input += samples[shot:]
-    train_input = np.array(train_input).astype(np.float32)
-    test_input = np.array(test_input).astype(np.float32)
-    return train_input, test_input, train_label, test_label
-
-def metric_val_tune(gallery, query, support_label, test_label, shot, train_mean=None, norm_type='CL2N'):
-    if norm_type == 'CL2N':
-        gallery = gallery - train_mean
-        gallery = gallery / LA.norm(gallery, 2, 1)[:, None]
-        query = query - train_mean
-        query = query / LA.norm(query, 2, 1)[:, None]
-    elif norm_type == 'L2N':
-        gallery = gallery / LA.norm(gallery, 2, 1)[:, None]
-        query = query / LA.norm(query, 2, 1)[:, None]
-
-    gallery = gallery.reshape(args.meta_val_way, shot, gallery.shape[-1]).mean(1)
-    support_label = support_label[::shot]
-    subtract = gallery[:, None, :] - query
-    distance = LA.norm(subtract, 2, axis=-1)
-    test_label = np.array(test_label)
-    # with SLK
-    knn = args.knn
-    lmd = args.lmd
-    unary = distance.transpose() ** 2
-    acc = slk_prediction(args, knn, lmd, query, unary, support_label, test_label)
-
-    return acc
-
 def metric_class_type(query, gallery, train_mean=None, norm_type='CL2N'):
     gallery = copy.deepcopy(gallery)
     query = copy.deepcopy(query)
@@ -589,93 +496,32 @@ def metric_class_type(query, gallery, train_mean=None, norm_type='CL2N'):
     for label, key in enumerate(sorted(gallery.keys())):
         subtract = gallery_support[:, None, :] - query[key]
         distance = LA.norm(subtract, 2, axis=-1)
-        predict = np.argmin(distance, axis=0)
-        test_label = np.array([label] * len(predict))
-        if args.slk and args.lmd != 0:
+        test_label = np.array([label] * query[key].shape[0])
+        if args.lshot and args.lmd != 0:
             knn = args.knn
             lmd = args.lmd
             unary = distance.transpose() ** 2
-            acc = slk_prediction(args, knn, lmd, query[key], unary, label, test_label)
-            per_acc.append(acc.mean())
-            mean_acc.append(acc.sum())
-            count += acc.shape[0]
+            predict = lshot_prediction(args, knn, lmd, query[key], unary)
         else:
-            acc = (predict == test_label)
-            per_acc.append(acc.mean())
-            mean_acc.append(acc.sum())
-            count += acc.shape[0]
+            predict = np.argmin(distance, axis=0)
+
+        acc = (predict == test_label)
+        per_acc.append(acc.mean())
+        mean_acc.append(acc.sum())
+        count += acc.shape[0]
+
     per_acc = np.array(per_acc).mean()
     mean_acc = np.array(mean_acc).sum() / count
     return per_acc, mean_acc
 
-def slk_prediction(args, knn, lmd, X, unary, support_label, test_label):
+def lshot_prediction(args, knn, lmd, X, unary):
 
-    W = create_affinity(X, knn, scale=None)
-    l = bound_update(args, unary, W, lmd)
-    out = np.take(support_label, l)
-    acc, _ = get_accuracy(test_label, out)
+    W = create_affinity(X, knn)
+    out = bound_update(args, unary, W, lmd)
+    return out
 
-    return acc
-def tune_lambda(train_loader, model, log):
-    val_loader = get_dataloader('val', aug=False, shuffle=False, out_name=False)
-    load_checkpoint(model, 'best')
-    # breakpoint()
-    out_mean, out_dict = extract_feature_tune(train_loader, val_loader, model, tag='best')
-    best_acc_1 = -1
-    best_lmd_1 = 0.1
-    best_acc_5 = -1
-    best_lmd_5 = 0.1
-    for lmd in [0.1, 0.3, 0.5, 0.7, 0.8, 1.0, 1.2, 1.5, 2.0]:
-        args.lmd = lmd
-        accuracy_info_shot1 = meta_evaluate_tune(out_dict, out_mean, 1)
-        accuracy_info_shot5 = meta_evaluate_tune(out_dict, out_mean, 5)
-        acc_1 = accuracy_info_shot1[0]
-        acc_5 = accuracy_info_shot5[0]
-        if acc_1>best_acc_1:
-            best_acc_1= acc_1
-            best_lmd_1 = args.lmd
-        if acc_5>best_acc_5:
-            best_acc_5= acc_5
-            best_lmd_5 = args.lmd
 
-        print(
-            'validation lmd={:0.2f}: Best\nfeature\tCL2N\n{}\t{:.4f}({:.4f})\n{}\t{:.4f}({:.4f}))'.format(args.lmd,
-            'GVP 1Shot', *accuracy_info_shot1, 'GVP_5Shot', *accuracy_info_shot5))
-        log.info(
-            'validation lmd={:0.2f}: Best\nfeature\tCL2N\n{}\t{:.4f}({:.4f})\n{}\t{:.4f}({:.4f}))'.format(args.lmd,
-            'GVP 1Shot', *accuracy_info_shot1, 'GVP_5Shot', *accuracy_info_shot5))
-        print('Best lambda on validation:\n{:0.2f} with 1 shot acc {:.4f}\n{:0.2f} with 5 shot acc {:.4f}'.format(best_lmd_1, best_acc_1,best_lmd_5, best_acc_5))
-        log.info('Best lambda on validation:\n{:0.2f} with 1 shot acc {:.4f}\n{:0.2f} with 5 shot acc {:.4f}'.format(best_lmd_1, best_acc_1,best_lmd_5, best_acc_5))
-    return best_lmd_1, best_lmd_5
-
-def get_accuracy(L1, L2):
-    # This is the Hungarian method use to match the original ground truth labeling with the returned labels from SLK which is similar to clustering.
-    # This is because there is no unique connection between a partition (a group of elements) and a specific label.
-    if L1.__len__() != L2.__len__():
-        print('size(L1) must == size(L2)')
-
-    Label1 = np.unique(L1)
-    nClass1 = Label1.__len__()
-    Label2 = np.unique(L2)
-    nClass2 = Label2.__len__()
-
-    nClass = max(nClass1, nClass2)
-    G = np.zeros((nClass, nClass))
-    for i in range(nClass1):
-        for j in range(nClass2):
-            G[i][j] = np.nonzero((L1 == Label1[i]) * (L2 == Label2[j]))[0].__len__()
-
-    # c = linear_assignment_.linear_assignment(-G.T)[:, 1]
-    c = linear_sum_assignment(-G.T)[1]
-    newL2 = np.zeros(L2.__len__())
-    for i in range(nClass2):
-        for j in np.nonzero(L2 == Label2[i])[0]:
-            if len(Label1) > c[i]:
-                newL2[j] = Label1[c[i]]
-
-    return accuracy_score(L1, newL2),newL2
-
-def create_affinity(X, knn, scale=None):
+def create_affinity(X, knn):
     N, D = X.shape
     # print('Compute Affinity ')
     nbrs = NearestNeighbors(n_neighbors=knn).fit(X)
@@ -683,33 +529,25 @@ def create_affinity(X, knn, scale=None):
 
     row = np.repeat(range(N), knn - 1)
     col = knnind[:, 1:].flatten()
-    if scale is None:
-        data = np.ones(X.shape[0] * (knn - 1))
-    else:
-        if scale == True:
-            scale = np.clip(dist[:,1], a_min=0.5)
-            np.exp((-dist[:, 1:] ** 2) / (2 * np.expand_dims(scale, axis=1) ** 2))
-        else:
-            data = np.exp((-dist[:, 1:] ** 2) / (2 * scale ** 2)).flatten()
-
+    data = np.ones(X.shape[0] * (knn - 1))
     W = sparse.csc_matrix((data, (row, col)), shape=(N, N), dtype=np.float)
+
+
     return W
 
 def do_extract_and_evaluate(model, log):
-
+    # breakpoint()
     train_loader = get_dataloader('train', aug=False, shuffle=False, out_name=False)
-    if args.tune_lmd :
-        print('Tuning Lambda')
-        best_lmd_1, best_lmd_5 = tune_lambda(train_loader, model, log)
-    else:
-        best_lmd_1 = best_lmd_5 = args.lmd
     query_loader = get_dataloader('query', aug=False, shuffle=False, out_name=False)
     repr_loader = get_dataloader('repr', aug=False, shuffle=False, out_name=False)
     load_checkpoint(model, 'last')
     [out_mean, fc_out_mean, out_dict, fc_out_dict, repr_out_dict,
      repr_fc_out_dict] = extract_feature(train_loader, query_loader, repr_loader, model,
                                          'last_inatural_enlarge_{}'.format(args.enlarge))
-    # breakpoint()
+    if args.lshot:
+        print('Running with LaplacianShot with Lambda ={}'.format(args.lmd))
+        log.info('Running with LaplacianShot with Lambda ={}'.format(args.lmd))
+
     for key in repr_out_dict.keys():
         out_dict[key] = np.stack(out_dict[key], axis=0)
         repr_out_dict[key] = np.stack(repr_out_dict[key], axis=0)
@@ -729,7 +567,6 @@ def do_extract_and_evaluate(model, log):
         log.info(
             'Meta Test: LAST\nfeature\tCL2N(per/mean)\tL2N(per/mean)\tUN(per/mean)\n{}\t{:.4f}/{:.4f}\t{:.4f}/{:.4f}\t{:.4f}/{:.4f}'.format(
                 'Logits:', *accuracy_info))
-
 
 if __name__ == '__main__':
     main()

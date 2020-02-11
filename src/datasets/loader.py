@@ -31,8 +31,10 @@ class DatasetFolder(object):
         return self.length
 
     def __getitem__(self, index):
-        assert os.path.isfile(self.root+'/'+self.data[index])
-        img = Image.open(self.root + '/' + self.data[index]).convert('RGB')
+        filename = self.data[index]
+        path_file = os.path.join(self.root, filename)
+        assert os.path.isfile(path_file)
+        img = Image.open(path_file).convert('RGB')
         label = self.labels[index]
         label = int(label)
         if self.transform:

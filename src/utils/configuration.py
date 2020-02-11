@@ -98,14 +98,14 @@ def parser_args():
     parser.add_argument('--pretrain', type=str, default=None,
                         help='path to the pretrained model, used for fine-tuning')
 
-    ## SLK
+    ## LaplacianShot
 
     parser.add_argument('--lmd', default=0.5, type=float,
-                        help='weight for laplacian in slk')
+                        help='weight for laplacian in LaplacianShot')
     parser.add_argument('--knn', default=3, type=int,
                         help='knn for affinity')
-    parser.add_argument('--slk', action='store_true',
-                        help='enable slk.')
+    parser.add_argument('--lshot', action='store_true',
+                        help='enable LaplacianShot.')
     parser.add_argument('--tune-lmd', default = False,  type=str2bool,
                         help='Tune Lambda on Validation set.')
     parser.add_argument('--plot-converge', default = False,  type=str2bool,

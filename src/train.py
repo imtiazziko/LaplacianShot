@@ -21,16 +21,12 @@ import torch.utils.data.distributed
 from torch.optim.lr_scheduler import MultiStepLR, StepLR, CosineAnnealingLR
 import tqdm
 from utils import configuration
-# from slk_update import bound_update
 from numpy import linalg as LA
 from scipy.stats import mode
 import pdb
 import datasets
 import models
-# from scipy import sparse
 from pyflann import *
-# import timeit
-# from sklearn.neighbors import NearestNeighbors
 best_prec1 = -1
 
 
@@ -39,7 +35,7 @@ def main():
     args = configuration.parser_args()
 
     ### initial logger
-    log = setup_logger(args.save_path + '/training.log')
+    log = setup_logger(args.save_path + args.log_file)
     for key, value in sorted(vars(args).items()):
         log.info(str(key) + ': ' + str(value))
 
@@ -483,44 +479,6 @@ def meta_evaluate(data, train_mean, shot):
     cl2n_mean, cl2n_conf = compute_confidence_interval(cl2n_list)
     return un_mean, un_conf, l2n_mean, l2n_conf, cl2n_mean, cl2n_conf
 
-
-# def metric_class_type(gallery, query, train_label, test_label, shot, train_mean=None, norm_type='CL2N'):
-#     if norm_type == 'CL2N':
-#         gallery = gallery - train_mean
-#         gallery = gallery / LA.norm(gallery, 2, 1)[:, None]
-#         query = query - train_mean
-#         query = query / LA.norm(query, 2, 1)[:, None]
-#     elif norm_type == 'L2N':
-#         gallery = gallery / LA.norm(gallery, 2, 1)[:, None]
-#         query = query / LA.norm(query, 2, 1)[:, None]
-#     # pdb.set_trace()
-#     gallery = gallery.reshape(args.meta_val_way, shot, gallery.shape[-1]).mean(1)
-#     train_label = train_label[::shot]
-#     subtract = gallery[:, None, :] - query
-#     distance = LA.norm(subtract, 2, axis=-1)
-#     idx = np.argpartition(distance, args.num_NN, axis=0)[:args.num_NN]
-#     nearest_samples = np.take(train_label, idx)
-#     out = mode(nearest_samples, axis=0)[0]
-#     out = out.astype(int)
-#     test_label = np.array(test_label)
-#     acc = (out == test_label).mean()
-#     # with SLK
-#     if args
-#     knn = 5
-#     aff_path = './data/W_' + str(knn) + '_' + '.npz'
-#     alg = None
-#     # X = np.concatenate((gallery, query), axis=0)
-#     X = query
-#     W = create_affinity(X, knn, scale = None, alg = alg, savepath = aff_path, W_path = None)
-#     unary = distance.transpose()
-#     l, C, mode_index, z, bound_E = bound_update(unary, X, W, 0.5, 3000, batch = False)
-#     out = np.take(train_label, l)
-#     # out = mode(nearest_samples, axis=0)[0]
-#     # out = out.astype(int)
-#     # acc = (out == test_label).mean()
-#     acc, _ = get_accuracy(test_label, out)
-#     return acc
-
 def metric_class_type(gallery, query, train_label, test_label, shot, train_mean=None, norm_type='CL2N'):
     if norm_type == 'CL2N':
         gallery = gallery - train_mean
@@ -543,63 +501,6 @@ def metric_class_type(gallery, query, train_label, test_label, shot, train_mean=
     acc = (out == test_label).mean()
     return acc
 
-
-# def create_affinity(X, knn, scale=None, alg="annoy", savepath=None, W_path=None):
-#     N, D = X.shape
-#     print('Compute Affinity ')
-#     start_time = timeit.default_timer()
-#     if alg == "flann":
-#         print('with Flann')
-#         flann = FLANN()
-#         knnind, dist = flann.nn(X, X, knn, algorithm="kdtree", target_precision=0.9, cores=5);
-#         # knnind = knnind[:,1:]
-#     else:
-#         nbrs = NearestNeighbors(n_neighbors=knn).fit(X)
-#         dist, knnind = nbrs.kneighbors(X)
-#
-#     row = np.repeat(range(N), knn - 1)
-#     col = knnind[:, 1:].flatten()
-#     if scale is None:
-#         data = np.ones(X.shape[0] * (knn - 1))
-#     else:
-#         data = np.exp((-dist[:, 1:] ** 2) / (2 * scale ** 2)).flatten()
-#
-#     W = sparse.csc_matrix((data, (row, col)), shape=(N, N), dtype=np.float)
-#     # W = (W + W.transpose(copy=True)) /2
-#     elapsed = timeit.default_timer() - start_time
-#     print(elapsed)
-#
-#     if isinstance(savepath, str):
-#         if savepath.endswith('.npz'):
-#             sparse.save_npz(savepath, W)
-#
-#     return W
-#
-# def get_accuracy(L1, L2):
-#     if L1.__len__() != L2.__len__():
-#         print('size(L1) must == size(L2)')
-#
-#     Label1 = np.unique(L1)
-#     nClass1 = Label1.__len__()
-#     Label2 = np.unique(L2)
-#     nClass2 = Label2.__len__()
-#
-#     nClass = max(nClass1, nClass2)
-#     G = np.zeros((nClass, nClass))
-#     for i in range(nClass1):
-#         for j in range(nClass2):
-#             G[i][j] = np.nonzero((L1 == Label1[i]) * (L2 == Label2[j]))[0].__len__()
-#
-#     # c = linear_assignment_.linear_assignment(-G.T)[:, 1]
-#     c = linear_sum_assignment(-G.T)[1]
-#     newL2 = np.zeros(L2.__len__())
-#     for i in range(nClass2):
-#         for j in np.nonzero(L2 == Label2[i])[0]:
-#             if len(Label1) > c[i]:
-#                 newL2[j] = Label1[c[i]]
-#
-#     return accuracy_score(L1, newL2),newL2
-
 def sample_case(ld_dict, shot):
     sample_class = random.sample(list(ld_dict.keys()), args.meta_val_way)
     train_input = []
@@ -618,6 +519,7 @@ def sample_case(ld_dict, shot):
 
 
 def do_extract_and_evaluate(model, log):
+    breakpoint()
     train_loader = get_dataloader('train', aug=False, shuffle=False, out_name=False)
     val_loader = get_dataloader('test', aug=False, shuffle=False, out_name=False)
     load_checkpoint(model, 'last')

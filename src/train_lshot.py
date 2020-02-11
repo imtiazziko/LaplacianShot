@@ -17,14 +17,14 @@ import torch.utils.data
 import torch.utils.data.distributed
 from torch.optim.lr_scheduler import MultiStepLR, StepLR, CosineAnnealingLR
 import tqdm
+from scipy.stats import mode
 from utils import configuration
-from slk_update import bound_update
+from lshot_update import bound_update
 from numpy import linalg as LA
 import datasets
 import models
 from scipy import sparse
-from pyflann import *
-import timeit
+import numpy as np
 from sklearn.neighbors import NearestNeighbors
 best_prec1 = -1
 
@@ -85,8 +85,6 @@ def main():
                      .format(args.resume, checkpoint['epoch']))
         else:
             log.info('[Attention]: Do not find checkpoint {}'.format(args.resume))
-
-    cudnn.benchmark = True
 
     # Data loading code
 
@@ -366,17 +364,21 @@ def extract_feature(train_loader, val_loader, model, tag='last'):
     model.eval()
     with torch.no_grad():
         # get training mean
-        out_mean, fc_out_mean = [], []
-        for i, (inputs, _) in enumerate(warp_tqdm(train_loader)):
-            outputs, fc_outputs = model(inputs, True)
-            out_mean.append(outputs.cpu().data.numpy())
-            if fc_outputs is not None:
-                fc_out_mean.append(fc_outputs.cpu().data.numpy())
-        out_mean = np.concatenate(out_mean, axis=0).mean(0)
-        if len(fc_out_mean) > 0:
-            fc_out_mean = np.concatenate(fc_out_mean, axis=0).mean(0)
+        if not os.path.isfile(save_dir + '/output_mean.plk'):
+            out_mean, fc_out_mean = [], []
+            for i, (inputs, _) in enumerate(warp_tqdm(train_loader)):
+                outputs, fc_outputs = model(inputs, True)
+                out_mean.append(outputs.cpu().data.numpy())
+                if fc_outputs is not None:
+                    fc_out_mean.append(fc_outputs.cpu().data.numpy())
+            out_mean = np.concatenate(out_mean, axis=0).mean(0)
+            if len(fc_out_mean) > 0:
+                fc_out_mean = np.concatenate(fc_out_mean, axis=0).mean(0)
+            else:
+                fc_out_mean = -1
+            save_pickle(save_dir + '/output_mean.plk', [out_mean,fc_out_mean])
         else:
-            fc_out_mean = -1
+            out_mean, fc_out_mean = load_pickle(save_dir + '/output_mean.plk')
 
         output_dict = collections.defaultdict(list)
         fc_output_dict = collections.defaultdict(list)
@@ -408,14 +410,21 @@ def extract_feature_tune(train_loader, val_loader, model, tag='best'):
     model.eval()
     with torch.no_grad():
         # get training mean
-        if not os.path.isfile(save_dir + '/output.plk'):
-            out_mean = []
+        if not os.path.isfile(save_dir + '/output_mean.plk'):
+            out_mean, fc_out_mean = [], []
             for i, (inputs, _) in enumerate(warp_tqdm(train_loader)):
-                outputs, _ = model(inputs, True)
+                outputs, fc_outputs = model(inputs, True)
                 out_mean.append(outputs.cpu().data.numpy())
+                if fc_outputs is not None:
+                    fc_out_mean.append(fc_outputs.cpu().data.numpy())
             out_mean = np.concatenate(out_mean, axis=0).mean(0)
+            if len(fc_out_mean) > 0:
+                fc_out_mean = np.concatenate(fc_out_mean, axis=0).mean(0)
+            else:
+                fc_out_mean = -1
+            save_pickle(save_dir + '/output_mean.plk', [out_mean,fc_out_mean])
         else:
-            out_mean = load_pickle(save_dir + '/output.plk')[0]
+            out_mean = load_pickle(save_dir + '/output_mean.plk')[0]
 
         output_dict = collections.defaultdict(list)
         for i, (inputs, labels) in enumerate(warp_tqdm(val_loader)):
@@ -525,7 +534,7 @@ def tune_lambda(train_loader, model, log):
     best_lmd_1 = 0.1
     best_acc_5 = -1
     best_lmd_5 = 0.1
-    for lmd in [0.1, 0.3, 0.5, 0.7, 0.8, 1.0, 1.2, 1.5, 2.0]:
+    for lmd in [0.1, 0.3, 0.5, 0.7, 0.8, 1.0, 1.2, 1.5]:
         args.lmd = lmd
         accuracy_info_shot1 = meta_evaluate_tune(out_dict, out_mean, 1)
         accuracy_info_shot5 = meta_evaluate_tune(out_dict, out_mean, 5)
@@ -548,26 +557,15 @@ def tune_lambda(train_loader, model, log):
         log.info('Best lambda on validation:\n{:0.2f} with 1 shot acc {:.4f}\n{:0.2f} with 5 shot acc {:.4f}'.format(best_lmd_1, best_acc_1,best_lmd_5, best_acc_5))
     return best_lmd_1, best_lmd_5
 
-def slk_prediction(args,knn,lmd,X,unary,train_label,test_label):
+def lshot_prediction(args, knn, lmd, X, unary, support_label, test_label):
 
-    alg = None
-    W = create_affinity(X, knn, scale=None, alg=alg)
+    W = create_affinity(X, knn)
     l = bound_update(args, unary, W, lmd)
-    # if more than 15 query points is used for the Laplacian prediction we can utilize them. However, the accurcay can be evaluated on the same 15 query by selecting
-    # those query indices. Note that we do not report these results in our paper and use Laplacian only with the 15 query points.
-    if args.meta_val_query > 15:
-        query_list = [np.arange(i * args.meta_val_query, (i * args.meta_val_query) + 15) for i in
-                      range(args.meta_val_way)]
-        query_list = np.concatenate(query_list)
-        l = l[query_list]
-        test_label = test_label[query_list]
-    ##
-    out = np.take(train_label, l)
+    out = np.take(support_label, l)
     acc, _ = get_accuracy(test_label, out)
-
     return acc
 
-def metric_class_type(gallery, query, train_label, test_label, shot, train_mean=None, norm_type='CL2N'):
+def metric_class_type(gallery, query, support_label, test_label, shot, train_mean=None, norm_type='CL2N'):
     if norm_type == 'CL2N':
         gallery = gallery - train_mean
         gallery = gallery / LA.norm(gallery, 2, 1)[:, None]
@@ -578,48 +576,40 @@ def metric_class_type(gallery, query, train_label, test_label, shot, train_mean=
         query = query / LA.norm(query, 2, 1)[:, None]
 
     gallery = gallery.reshape(args.meta_val_way, shot, gallery.shape[-1]).mean(1)
-    train_label = train_label[::shot]
+    support_label = support_label[::shot]
     subtract = gallery[:, None, :] - query
     distance = LA.norm(subtract, 2, axis=-1)
     test_label = np.array(test_label)
-    # with SLK
-    if args.slk:
+    # with LapLacianShot
+    if args.lshot and args.lmd!=0:
         knn = args.knn
         lmd = args.lmd
         unary = distance.transpose() ** 2
-        acc = slk_prediction(args, knn, lmd, query, unary, train_label, test_label)
+        acc = lshot_prediction(args, knn, lmd, query, unary, support_label, test_label)
+    else:
+        idx = np.argpartition(distance, args.num_NN, axis=0)[:args.num_NN]
+        nearest_samples = np.take(support_label, idx)
+        out = mode(nearest_samples, axis=0)[0]
+        out = out.astype(int)
+        acc = (out == test_label).mean()
     return acc
 
 
-def create_affinity(X, knn, scale=None, alg=None):
+def create_affinity(X, knn):
     N, D = X.shape
     # print('Compute Affinity ')
-    if alg == "flann":
-        print('with Flann')
-        flann = FLANN()
-        knnind, dist = flann.nn(X, X, knn, algorithm="kdtree", target_precision=0.9, cores=5)
-
-    else:
-        nbrs = NearestNeighbors(n_neighbors=knn).fit(X)
-        dist, knnind = nbrs.kneighbors(X)
+    nbrs = NearestNeighbors(n_neighbors=knn).fit(X)
+    dist, knnind = nbrs.kneighbors(X)
 
     row = np.repeat(range(N), knn - 1)
     col = knnind[:, 1:].flatten()
-    if scale is None:
-        data = np.ones(X.shape[0] * (knn - 1))
-    else:
-        if scale == True:
-            scale = np.clip(dist[:,1], a_min=0.5)
-            np.exp((-dist[:, 1:] ** 2) / (2 * np.expand_dims(scale, axis=1) ** 2))
-        else:
-            data = np.exp((-dist[:, 1:] ** 2) / (2 * scale ** 2)).flatten()
-
+    data = np.ones(X.shape[0] * (knn - 1))
     W = sparse.csc_matrix((data, (row, col)), shape=(N, N), dtype=np.float)
     return W
 
 def get_accuracy(L1, L2):
-    # This is the Hungarian method use to match the original ground truth labeling with the returned labels from SLK which is similar to clustering.
-    # This is because there is no unique connection between a partition (a group of elements) and a specific label.
+    # Since the labels may be different we utilize the Hungarian method to ensure the map of
+    # the original ground truth labeling with the returned labels from our laplacian update which is similar to clustering.
     if L1.__len__() != L2.__len__():
         print('size(L1) must == size(L2)')
 
@@ -634,7 +624,6 @@ def get_accuracy(L1, L2):
         for j in range(nClass2):
             G[i][j] = np.nonzero((L1 == Label1[i]) * (L2 == Label2[j]))[0].__len__()
 
-    # c = linear_assignment_.linear_assignment(-G.T)[:, 1]
     c = linear_sum_assignment(-G.T)[1]
     newL2 = np.zeros(L2.__len__())
     for i in range(nClass2):
