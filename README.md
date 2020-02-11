@@ -13,17 +13,17 @@ We propose LaplacianShot for few-shot tasks, which integrates two types of poten
 
 ### 2. Download Datasets
 ### 2.1 Mini-ImageNet
-You can download the dataset from https://drive.google.com/open?id=0B3Irx3uQNoBMQ1FlNXJsZUdYWEE
+You can download the dataset from [here](https://drive.google.com/open?id=0B3Irx3uQNoBMQ1FlNXJsZUdYWEE)
 
 ### 2.2 Tiered-ImageNet
-You can download the dataset from https://drive.google.com/file/d/1g1aIDy2Ar_MViF2gDXFYDBTR-HYecV07/view.
+You can download the Tiered-ImageNet from [here](https://drive.google.com/file/d/1g1aIDy2Ar_MViF2gDXFYDBTR-HYecV07/view).
 After downloading and unziping this dataset, you have to run the follow script to generate split files.
 ```angular2
 python src/utils/tieredImagenet.py --data path-to-tiered --split split/tiered/
 ```
 ### 2.3 iNat2017
-We follow the instruction from https://github.com/daviswer/fewshotlocal. Download and unpack the iNat2017 _Training and validation images_, and the _Training bounding box annotations_, to [data/iNat](./data/iNat) directory from [here](https://github.com/visipedia/inat_comp/blob/master/2017/README.md#Data).
- Create the meta-iNat dataset by running:
+We follow the instruction from https://github.com/daviswer/fewshotlocal. Download and unpack the iNat2017 _Training and validation images_, and the _Training bounding box annotations_, to [data/iNat](./data/iNat) directory from [here](https://github.com/visipedia/inat_comp/blob/master/2017/README.md#Data). Also download _traincatlist.pth_ and _testcatlist.pth_ in the same directory from [here](https://github.com/daviswer/fewshotlocal) and finally
+ create the meta-iNat dataset by running:
  ```angular2
 cd ./data/iNat
 python iNat_setup.py
@@ -41,17 +41,17 @@ cd ./src
 python download_models.py
 ```
 
-you can run the following scripts to test and run the code.
+You can run the following scripts to test -
 
-In miniImageNet:
+for miniImageNet:
 ```angular2
 sh run_mini.sh
 ```
-In tieredImageNet
+for tieredImageNet:
 ```angular2
 sh run_tiered.sh
 ```
-In iNat
+for meta-iNat:
 ```angular2
 sh run_iNat.sh
 ```
