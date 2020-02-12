@@ -100,7 +100,7 @@ def parser_args():
 
     ## LaplacianShot
 
-    parser.add_argument('--lmd', default=0.5, type=float,
+    parser.add_argument('--lmd', default=1.0, type=float,
                         help='weight for laplacian in LaplacianShot')
     parser.add_argument('--knn', default=3, type=int,
                         help='knn for affinity')

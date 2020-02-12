@@ -30,6 +30,7 @@ best_prec1 = -1
 
 
 def main():
+
     global args, best_prec1
     args = configuration.parser_args()
     ### initial logger
@@ -54,7 +55,6 @@ def main():
     criterion = nn.CrossEntropyLoss().cuda()
 
     optimizer = get_optimizer(model)
-
     if args.pretrain:
         pretrain = args.pretrain + '/checkpoint.pth.tar'
         if os.path.isfile(pretrain):
