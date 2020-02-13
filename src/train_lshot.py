@@ -104,9 +104,10 @@ def main():
     scheduler = get_scheduler(len(train_loader), optimizer)
     tqdm_loop = warp_tqdm(list(range(args.start_epoch, args.epochs)))
     for epoch in tqdm_loop:
-        scheduler.step(epoch)
+        # scheduler.step(epoch)
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, scheduler, log)
+        scheduler.step(epoch)
         # evaluate on meta validation set
         is_best = False
         if (epoch + 1) % args.meta_val_interval == 0:
