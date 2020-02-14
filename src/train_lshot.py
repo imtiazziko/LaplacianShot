@@ -92,6 +92,7 @@ def main():
         do_extract_and_evaluate(model, log)
         return
 
+    args.enlarge = False
     if args.do_meta_train:
         sample_info = [args.meta_train_iter, args.meta_train_way, args.meta_train_shot, args.meta_train_query]
         train_loader = get_dataloader('train', not args.disable_train_augment, sample=sample_info)
@@ -129,6 +130,7 @@ def main():
         }, is_best, folder=args.save_path)
 
     # do evaluate at the end
+    args.enlarge = True
     do_extract_and_evaluate(model, log)
 
 
@@ -668,12 +670,12 @@ def do_extract_and_evaluate(model, log):
     load_checkpoint(model, 'last')
     out_mean, fc_out_mean, out_dict, fc_out_dict = extract_feature(train_loader, val_loader, model, 'last')
     args.lmd = best_lmd_1
-    print(' Run with tuned lambda {} for 1 shot'.format(args.lmd))
-    log.info(' Run with tuned lambda {} for 1 shot'.format(args.lmd))
+    print(' Run with lambda {} for 1 shot'.format(args.lmd))
+    log.info(' Run with lambda {} for 1 shot'.format(args.lmd))
     accuracy_info_shot1 = meta_evaluate(out_dict, out_mean, 1)
     args.lmd = best_lmd_5
-    print(' Run with tuned lambda {} for 5 shot'.format(args.lmd))
-    log.info(' Run with tuned lambda {} for 5 shot'.format(args.lmd))
+    print(' Run with lambda {} for 5 shot'.format(args.lmd))
+    log.info(' Run with lambda {} for 5 shot'.format(args.lmd))
     accuracy_info_shot5 = meta_evaluate(out_dict, out_mean, 5)
     print(
         'Meta Test: LAST\nfeature\tUN\tL2N\tCL2N\n{}\t{:.4f}({:.4f})\t{:.4f}({:.4f})\t{:.4f}({:.4f})\n{}\t{:.4f}({:.4f})\t{:.4f}({:.4f})\t{:.4f}({:.4f})'.format(

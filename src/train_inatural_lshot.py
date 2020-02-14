@@ -97,7 +97,7 @@ def main():
     if args.evaluate:
         do_extract_and_evaluate(model, log)
         return
-
+    args.enlarge = False
     if args.do_meta_train:
         sample_info = [args.meta_train_iter, args.meta_train_way, args.meta_train_shot, args.meta_train_query]
         train_loader = get_dataloader('train', not args.disable_train_augment, sample=sample_info)
@@ -134,6 +134,7 @@ def main():
         }, is_best, folder=args.save_path)
 
     # do evaluate at the end
+    args.enlarge = True
     do_extract_and_evaluate(model, log)
 
 
@@ -545,8 +546,8 @@ def do_extract_and_evaluate(model, log):
      repr_fc_out_dict] = extract_feature(train_loader, query_loader, repr_loader, model,
                                          'last_inatural_enlarge_{}'.format(args.enlarge))
     if args.lshot:
-        print('Running with LaplacianShot with Lambda ={}'.format(args.lmd))
-        log.info('Running with LaplacianShot with Lambda ={}'.format(args.lmd))
+        print('Running LaplacianShot with Lambda ={}'.format(args.lmd))
+        log.info('Running LaplacianShot with Lambda ={}'.format(args.lmd))
 
     for key in repr_out_dict.keys():
         out_dict[key] = np.stack(out_dict[key], axis=0)

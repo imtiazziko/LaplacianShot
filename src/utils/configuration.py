@@ -21,9 +21,9 @@ def parser_args():
                         help='disable training augmentation')
     parser.add_argument('--disable-random-resize', action='store_true',
                         help='disable random resizing')
-    parser.add_argument('--enlarge', action='store_true',
-                        help='enlarge the image size then center crop')
-    # parser.add_argument('--enlarge', default=True, type=bool, help='enlarge the image size then center crop')
+    # parser.add_argument('--enlarge', action='store_true',
+    #                     help='enlarge the image size then center crop')
+    parser.add_argument('--enlarge', default=True, type=bool, help='enlarge the image size then center crop')
     ### network setting
     parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                         help='network architecture')

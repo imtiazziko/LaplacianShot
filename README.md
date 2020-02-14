@@ -35,13 +35,13 @@ python ./src/inatural_split.py --data path-to-inat/setup --split ./split/inatura
 ```
 
 ### 3 Train and Test
-You can download the pretrained convolutional network models on base classes by running:
+You can download the pretrained convolutional network models on base classes from SimpleShot github by running:
 ```angular2
 cd ./src
 python download_models.py
 ```
-Alternatively to run the training on the base classes from scratch remove the "--evaluate --enlarge" options in the following scripts.
-You can run the following scripts-
+Alternatively to train the network on the base classes from scratch remove the "--evaluate " options in the following scripts.
+The scripts to test LaplacianShot-
 
 for miniImageNet:
 ```angular2
@@ -55,4 +55,4 @@ for meta-iNat:
 ```angular2
 sh run_iNat.sh
 ```
-The results are saved in the results/ folder in the specified log files.
+The results are saved in the results/ folder.
