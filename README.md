@@ -17,7 +17,7 @@ You can download the dataset from [here](https://drive.google.com/open?id=0B3Irx
 
 #### 2.2 Tiered-ImageNet
 You can download the Tiered-ImageNet from [here](https://drive.google.com/file/d/1g1aIDy2Ar_MViF2gDXFYDBTR-HYecV07/view).
-After downloading and unziping this dataset, you have to run the follow script to generate split files.
+After downloading and unziping this dataset run the following script to generate split files.
 ```angular2
 python src/utils/tieredImagenet.py --data path-to-tiered --split split/tiered/
 ```

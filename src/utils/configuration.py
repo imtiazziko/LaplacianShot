@@ -2,7 +2,7 @@ import configargparse
 import argparse
 
 def parser_args():
-    parser = configargparse.ArgParser(description='PyTorch ImageNet Training')
+    parser = configargparse.ArgParser(description='PyTorch Training')
     parser.add('-c', '--config', required=True,
                is_config_file=True, help='config file')
     ### dataset
