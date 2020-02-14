@@ -1,4 +1,4 @@
-# LaplacianShot for few shot learning
+# LaplacianShot: Laplacian Regularized Few Shot Learning
 
 This repository contains the code for **LaplacianShot**. The code is based on the [SimpleShot github](https://github.com/mileyan/simple_shot)
 
