@@ -1,6 +1,6 @@
 # LaplacianShot: Laplacian Regularized Few Shot Learning
 
-This repository contains the code for **LaplacianShot**. The code is based on the [SimpleShot github](https://github.com/mileyan/simple_shot)
+This repository contains the code for **LaplacianShot**. The code is adapted from [SimpleShot github](https://github.com/mileyan/simple_shot)
 
 
 ## Introduction
@@ -35,7 +35,7 @@ python ./src/inatural_split.py --data path-to-inat/setup --split ./split/inatura
 ```
 
 ### 3 Train and Test
-You can download the pretrained convolutional network models on base classes from SimpleShot github by running:
+You can download the pretrained convolutional network models on base classes by running:
 ```angular2
 cd ./src
 python download_models.py

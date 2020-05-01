@@ -2,7 +2,7 @@
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 export CUDA_VISIBLE_DEVICES=1
 # model=conv4.config
-# python ./src/train_inatural_lshot.py -c ./configs/inatural/softmax/$model --data ./data/iNat/setup --log-file /simpleshot.log --evaluate
+# python ./src/test_inatural.py -c ./configs/inatural/softmax/$model --data ./data/iNat/setup --log-file /simpleshot.log --evaluate
 lmd=1.0
 # ##
  ## Resnet 10

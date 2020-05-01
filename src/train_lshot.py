@@ -30,7 +30,6 @@ best_prec1 = -1
 
 
 def main():
-
     global args, best_prec1
     args = configuration.parser_args()
     ### initial logger
@@ -52,9 +51,14 @@ def main():
     model = torch.nn.DataParallel(model).cuda()
 
     # define loss function (criterion) and optimizer
-    criterion = nn.CrossEntropyLoss().cuda()
+    if args.label_smooth > 0:
+        criterion = SmoothCrossEntropy(epsilon=args.label_smooth).cuda()
+
+    else:
+        criterion = nn.CrossEntropyLoss().cuda()
 
     optimizer = get_optimizer(model)
+
     if args.pretrain:
         pretrain = args.pretrain + '/checkpoint.pth.tar'
         if os.path.isfile(pretrain):
@@ -105,7 +109,6 @@ def main():
     scheduler = get_scheduler(len(train_loader), optimizer)
     tqdm_loop = warp_tqdm(list(range(args.start_epoch, args.epochs)))
     for epoch in tqdm_loop:
-        # scheduler.step(epoch)
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, scheduler, log)
         scheduler.step(epoch)
@@ -259,6 +262,15 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar', folder='resul
     if is_best:
         shutil.copyfile(folder + '/' + filename, folder + '/model_best.pth.tar')
 
+class SmoothCrossEntropy(nn.Module):
+    def __init__(self, epsilon: float = 0.):
+        super(SmoothCrossEntropy, self).__init__()
+        self.epsilon = float(epsilon)
+
+    def forward(self, logits: torch.Tensor, labels: torch.LongTensor) -> torch.Tensor:
+        target_probs = torch.full_like(logits, self.epsilon / (logits.shape[1] - 1))
+        target_probs.scatter_(1, labels.unsqueeze(1), 1 - self.epsilon)
+        return F.kl_div(torch.log_softmax(logits, 1), target_probs, reduction='batchmean')
 
 class AverageMeter(object):
     def __init__(self):
@@ -441,9 +453,10 @@ def extract_feature_tune(train_loader, val_loader, model, tag='best'):
         return all_info
 
 def get_dataloader(split, aug=False, shuffle=True, out_name=False, sample=None):
+    # breakpoint()
     # sample: iter, way, shot, query
     if aug:
-        transform = datasets.with_augment(84, disable_random_resize=args.disable_random_resize)
+        transform = datasets.with_augment(84, disable_random_resize=args.disable_random_resize, jitter=args.jitter)
     else:
         transform = datasets.without_augment(84, enlarge=args.enlarge)
     sets = datasets.DatasetFolder(args.data, args.split_dir, split, transform, out_name=out_name)
@@ -455,6 +468,7 @@ def get_dataloader(split, aug=False, shuffle=True, out_name=False, sample=None):
         loader = torch.utils.data.DataLoader(sets, batch_size=args.batch_size, shuffle=shuffle,
                                              num_workers=args.workers, pin_memory=True)
     return loader
+
 
 
 def warp_tqdm(data_loader):
@@ -578,7 +592,25 @@ def metric_class_type(gallery, query, support_label, test_label, shot, train_mea
         gallery = gallery / LA.norm(gallery, 2, 1)[:, None]
         query = query / LA.norm(query, 2, 1)[:, None]
 
-    gallery = gallery.reshape(args.meta_val_way, shot, gallery.shape[-1]).mean(1)
+    if args.proto_rect:
+     # Prototype rectification section 3.3 from Liu et al. 2020
+        eta = gallery.mean(0) - query.mean(0) # shift
+        query = query + eta[np.newaxis,:]
+        query_aug = np.concatenate((gallery, query),axis=0)
+        gallery_ = gallery.reshape(args.meta_val_way, shot, gallery.shape[-1]).mean(1)
+        gallery_ = torch.from_numpy(gallery_)
+        query_aug = torch.from_numpy(query_aug)
+        distance = get_metric('cosine')(gallery_, query_aug)
+        predict = torch.argmin(distance, dim=1)
+        # Compute weights as in eq.6 and multiply
+        cos_sim = F.cosine_similarity(query_aug[:, None, :], gallery_[None, :, :], dim=2)
+        cos_sim = 10 * cos_sim
+        W = F.softmax(cos_sim,dim=1)
+        gallery_list = [(W[predict==i,i].unsqueeze(1)*query_aug[predict==i]).mean(0,keepdim=True) for i in predict.unique()]
+        gallery = torch.cat(gallery_list,dim=0).numpy()
+    else:
+        gallery = gallery.reshape(args.meta_val_way, shot, gallery.shape[-1]).mean(1)
+
     support_label = support_label[::shot]
     subtract = gallery[:, None, :] - query
     distance = LA.norm(subtract, 2, axis=-1)
@@ -666,6 +698,8 @@ def do_extract_and_evaluate(model, log):
     else:
         best_lmd_1 = best_lmd_5 = args.lmd
     val_loader = get_dataloader('test', aug=False, shuffle=False, out_name=False)
+    print(' Proto-rectification = {} in Evaluation'.format(args.proto_rect))
+    log.info(' Proto-rectification = {} in Evaluation'.format(args.proto_rect))
     ## With the last model trained on source dataset
     load_checkpoint(model, 'last')
     out_mean, fc_out_mean, out_dict, fc_out_dict = extract_feature(train_loader, val_loader, model, 'last')
@@ -687,12 +721,12 @@ def do_extract_and_evaluate(model, log):
     load_checkpoint(model, 'best')
     out_mean, fc_out_mean, out_dict, fc_out_dict = extract_feature(train_loader, val_loader, model, 'best')
     args.lmd = best_lmd_1
-    print(' Run with tuned lambda {} for 1 shot'.format(args.lmd))
-    log.info(' Run with tuned lambda {} for 1 shot'.format(args.lmd))
+    print(' Run with lambda {} for 1 shot'.format(args.lmd))
+    log.info(' Run with lambda {} for 1 shot'.format(args.lmd))
     accuracy_info_shot1 = meta_evaluate(out_dict, out_mean, 1)
     args.lmd = best_lmd_5
-    print(' Run with tuned lambda {} for 5 shot'.format(args.lmd))
-    log.info(' Run with tuned lambda {} for 5 shot'.format(args.lmd))
+    print(' Run with lambda {} for 5 shot'.format(args.lmd))
+    log.info(' Run with lambda {} for 5 shot'.format(args.lmd))
     accuracy_info_shot5 = meta_evaluate(out_dict, out_mean, 5)
     print(
         'Meta Test: BEST\nfeature\tUN\tL2N\tCL2N\n{}\t{:.4f}({:.4f})\t{:.4f}({:.4f})\t{:.4f}({:.4f})\n{}\t{:.4f}({:.4f})\t{:.4f}({:.4f})\t{:.4f}({:.4f})'.format(
