@@ -21,7 +21,13 @@ After downloading and unziping this dataset run the following script to generate
 ```angular2
 python src/utils/tieredImagenet.py --data path-to-tiered --split split/tiered/
 ```
-#### 2.3 iNat2017
+#### 2.3 CUB
+Download and unpack the CUB 200-2011 from [here](http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz)
+After downloading and unziping this dataset run the following script to generate split files.
+```angular2
+python src/utils/cub.py --data path-to-cub --split split/cub/
+```
+#### 2.4 iNat2017
 We follow the instruction from https://github.com/daviswer/fewshotlocal. Download and unpack the iNat2017 _Training and validation images_, and the _Training bounding box annotations_, to [data/iNat](./data/iNat) directory from [here](https://github.com/visipedia/inat_comp/blob/master/2017/README.md#Data). Also download _traincatlist.pth_ and _testcatlist.pth_ in the same directory from [here](https://github.com/daviswer/fewshotlocal) and finally
  create the meta-iNat dataset by running:
  ```angular2
@@ -35,24 +41,24 @@ python ./src/inatural_split.py --data path-to-inat/setup --split ./split/inatura
 ```
 
 ### 3 Train and Test
-You can download the pretrained convolutional network models on base classes by running:
+You can download our pretrained network models on base classes by running:
 ```angular2
 cd ./src
 python download_models.py
 ```
-Alternatively to train the network on the base classes from scratch remove the "--evaluate " options in the following scripts.
+Alternatively to train the network on the base classes from scratch remove the "--evaluate " options in the following script.
 The scripts to test LaplacianShot-
 
 for miniImageNet:
 ```angular2
-sh run_mini.sh
+sh run.sh
 ```
-for tieredImageNet:
-```angular2
-sh run_tiered.sh
-```
-for meta-iNat:
-```angular2
-sh run_iNat.sh
-```
-The results are saved in the results/ folder.
+You can change the commented options accordingly for each dataset.
+
+Some of our results of LaplacianShot with WRN on mini/tiered imageNet/CUB:
+
+| Dataset | Network   | 1-shot | 5-shot |
+|---------|-----------|--------|--------|
+| Mini    | WRN       | 74.86  | 84.13  |
+| Tiered  | WRN       | 80.18  | 87.56  |
+| CUB     | Resbet-18 | 80.96  | 88.38  |
