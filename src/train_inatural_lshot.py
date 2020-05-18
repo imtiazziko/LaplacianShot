@@ -57,7 +57,11 @@ def main():
     model = torch.nn.DataParallel(model).cuda()
 
     # define loss function (criterion) and optimizer
-    criterion = nn.CrossEntropyLoss().cuda()
+    if args.label_smooth > 0:
+        criterion = SmoothCrossEntropy(epsilon=args.label_smooth).cuda()
+
+    else:
+        criterion = nn.CrossEntropyLoss().cuda()
 
     optimizer = get_optimizer(model)
 
@@ -110,9 +114,9 @@ def main():
     scheduler = get_scheduler(len(train_loader), optimizer)
     tqdm_loop = warp_tqdm(list(range(args.start_epoch, args.epochs)))
     for epoch in tqdm_loop:
-        scheduler.step(epoch)
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, scheduler, log)
+        scheduler.step(epoch)
         # evaluate on meta validation set
         is_best = False
         if (epoch + 1) % args.meta_val_interval == 0:
@@ -263,6 +267,15 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar', folder='resul
     if is_best:
         shutil.copyfile(folder + '/' + filename, folder + '/model_best.pth.tar')
 
+class SmoothCrossEntropy(nn.Module):
+    def __init__(self, epsilon: float = 0.):
+        super(SmoothCrossEntropy, self).__init__()
+        self.epsilon = float(epsilon)
+
+    def forward(self, logits: torch.Tensor, labels: torch.LongTensor) -> torch.Tensor:
+        target_probs = torch.full_like(logits, self.epsilon / (logits.shape[1] - 1))
+        target_probs.scatter_(1, labels.unsqueeze(1), 1 - self.epsilon)
+        return F.kl_div(torch.log_softmax(logits, 1), target_probs, reduction='batchmean')
 
 class AverageMeter(object):
     def __init__(self):
@@ -422,7 +435,7 @@ def extract_feature(train_loader, query_loader, repr_loader, model, tag='last'):
 def get_dataloader(split, aug=False, shuffle=True, out_name=False, sample=None):
     # sample: iter, way, shot, query
     if aug:
-        transform = datasets.with_augment(84)
+        transform = datasets.with_augment(84,jitter=args.jitter)
     else:
         transform = datasets.without_augment(84, enlarge=args.enlarge)
     sets = datasets.DatasetFolder(args.data, args.split_dir, split, transform, out_name=out_name)
@@ -499,7 +512,7 @@ def metric_class_type(query, gallery, train_mean=None, norm_type='CL2N'):
         distance = LA.norm(subtract, 2, axis=-1)
         test_label = np.array([label] * query[key].shape[0])
         if args.lshot and args.lmd != 0:
-            knn = args.knn
+            knn = 10
             lmd = args.lmd
             unary = distance.transpose() ** 2
             predict = lshot_prediction(args, knn, lmd, query[key], unary)

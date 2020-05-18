@@ -547,22 +547,20 @@ def tune_lambda(train_loader, model, log):
     load_checkpoint(model, 'best')
     # breakpoint()
     out_mean, out_dict = extract_feature_tune(train_loader, val_loader, model, tag='best')
-    best_acc_1 = -1
-    best_lmd_1 = 0.1
-    best_acc_5 = -1
-    best_lmd_5 = 0.1
-    for lmd in [0.1, 0.3, 0.5, 0.7, 0.8, 1.0, 1.2, 1.5]:
+
+    acc_val_list_1 = []
+    acc_val_list_5 = []
+
+    lmd_list = [0.1, 0.3, 0.5, 0.7, 0.8, 1.0, 1.2, 1.5]
+    for lmd in lmd_list:
         args.lmd = lmd
         accuracy_info_shot1 = meta_evaluate_tune(out_dict, out_mean, 1)
         accuracy_info_shot5 = meta_evaluate_tune(out_dict, out_mean, 5)
-        acc_1 = accuracy_info_shot1[0]
-        acc_5 = accuracy_info_shot5[0]
-        if acc_1>best_acc_1:
-            best_acc_1= acc_1
-            best_lmd_1 = args.lmd
-        if acc_5>best_acc_5:
-            best_acc_5= acc_5
-            best_lmd_5 = args.lmd
+
+        acc_1_val = accuracy_info_shot1[0]
+        acc_5_val = accuracy_info_shot5[0]
+        acc_val_list_1.append(acc_1_val)
+        acc_val_list_5.append(acc_5_val)
 
         print(
             'validation lmd={:0.2f}: Best\nfeature\tCL2N\n{}\t{:.4f}({:.4f})\n{}\t{:.4f}({:.4f}))'.format(args.lmd,
@@ -570,8 +568,17 @@ def tune_lambda(train_loader, model, log):
         log.info(
             'validation lmd={:0.2f}: Best\nfeature\tCL2N\n{}\t{:.4f}({:.4f})\n{}\t{:.4f}({:.4f}))'.format(args.lmd,
             'GVP 1Shot', *accuracy_info_shot1, 'GVP_5Shot', *accuracy_info_shot5))
-        print('Best lambda on validation:\n{:0.2f} with 1 shot acc {:.4f}\n{:0.2f} with 5 shot acc {:.4f}'.format(best_lmd_1, best_acc_1,best_lmd_5, best_acc_5))
-        log.info('Best lambda on validation:\n{:0.2f} with 1 shot acc {:.4f}\n{:0.2f} with 5 shot acc {:.4f}'.format(best_lmd_1, best_acc_1,best_lmd_5, best_acc_5))
+
+    acc_val_list_1 = np.asarray(acc_val_list_1)
+    acc_val_list_5 = np.asarray(acc_val_list_5)
+    best_acc_1 = acc_val_list_1.max()
+    best_lmd_1 = lmd_list[acc_val_list_1.argmax()]
+    best_acc_5 = acc_val_list_5.max()
+    best_lmd_5 = lmd_list[acc_val_list_5.argmax()]
+
+    print('Best lambda on validation:\n{:0.2f} with 1 shot acc {:.4f}\n{:0.2f} with 5 shot acc {:.4f}'.format(best_lmd_1, best_acc_1,best_lmd_5, best_acc_5))
+    log.info('Best lambda on validation:\n{:0.2f} with 1 shot acc {:.4f}\n{:0.2f} with 5 shot acc {:.4f}'.format(best_lmd_1, best_acc_1,best_lmd_5, best_acc_5))
+
     return best_lmd_1, best_lmd_5
 
 def lshot_prediction(args, knn, lmd, X, unary, support_label, test_label):
@@ -593,7 +600,6 @@ def metric_class_type(gallery, query, support_label, test_label, shot, train_mea
         query = query / LA.norm(query, 2, 1)[:, None]
 
     if args.proto_rect:
-     # Prototype rectification section 3.3 from Liu et al. 2020
         eta = gallery.mean(0) - query.mean(0) # shift
         query = query + eta[np.newaxis,:]
         query_aug = np.concatenate((gallery, query),axis=0)
@@ -602,7 +608,6 @@ def metric_class_type(gallery, query, support_label, test_label, shot, train_mea
         query_aug = torch.from_numpy(query_aug)
         distance = get_metric('cosine')(gallery_, query_aug)
         predict = torch.argmin(distance, dim=1)
-        # Compute weights as in eq.6 and multiply
         cos_sim = F.cosine_similarity(query_aug[:, None, :], gallery_[None, :, :], dim=2)
         cos_sim = 10 * cos_sim
         W = F.softmax(cos_sim,dim=1)

@@ -2,7 +2,7 @@ import configargparse
 import argparse
 
 def parser_args():
-    parser = configargparse.ArgParser(description='PyTorch Training')
+    parser = configargparse.ArgParser(description='LaplacianSHot')
     parser.add('-c', '--config', required=True,
                is_config_file=True, help='config file')
     ### dataset
@@ -22,9 +22,6 @@ def parser_args():
     parser.add_argument('--disable-random-resize', action='store_true',
                         help='disable random resizing')
     parser.add_argument('--jitter', default=True, type=bool, help='Image jitter added')
-
-    # parser.add_argument('--enlarge', action='store_true',
-    #                     help='enlarge the image size then center crop')
     parser.add_argument('--enlarge', default=True, type=bool, help='enlarge the image size then center crop')
     ### network setting
     parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
@@ -104,8 +101,8 @@ def parser_args():
 
     ## LaplacianShot
 
-    parser.add_argument('--lmd', default=0.5, type=float,
-                        help='weight for laplacian in LaplacianShot')
+    parser.add_argument('--lmd', default=1.0, type=float,
+                        help='weight for Laplacian')
     parser.add_argument('--knn', default=3, type=int,
                         help='knn for affinity')
     parser.add_argument('--lshot', action='store_true',
@@ -116,6 +113,7 @@ def parser_args():
                         help='Prototype rectification')
     parser.add_argument('--plot-converge', default = False,  type=str2bool,
                         help='plot the energy in each bound updates.')
+
     return parser.parse_args()
 
 def str2bool(v):
