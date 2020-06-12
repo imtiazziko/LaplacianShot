@@ -16,7 +16,7 @@ config=./configs/mini/softmax/resnet18.config # mini
 #
 python ./src/train_lshot.py -c $config --proto-rect $protrec --lmd $lmd --tune-lmd $tune  --data $datapath --lshot --log-file /LaplacianShot.log --evaluate
 
-## meta-inat
+## iNat
 #datapath=./data/iNat/setup/ # iNat
 #config=./configs/inatural/softmax/resnet18.config # iNat
-python ./src/train_inatural_lshot.py -c $config --lmd $lmd --data $datapath --lshot --log-file /LaplacianShot.log --evaluate
+#python ./src/train_inatural_lshot.py -c $config --lmd $lmd --data $datapath --lshot --log-file /LaplacianShot.log --evaluate
