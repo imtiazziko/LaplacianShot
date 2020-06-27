@@ -58,10 +58,10 @@ sh run.sh
 ```
 You can change the commented options accordingly for each dataset.
 
-Some of our results of LaplacianShot with WRN on mini/tiered imageNet/CUB:
+Some of our results of LaplacianShot with WRN network on mini/tiered-ImageNet and CUB dataset:
 
 | Dataset | Network   | 1-shot | 5-shot |
 |---------|-----------|--------|--------|
-| Mini    | WRN       | 74.86  | 84.13  |
-| Tiered  | WRN       | 80.18  | 87.56  |
-| CUB     | Resbet-18 | 80.96  | 88.38  |
+| miniImageNet    | WRN       | 74.86  | 84.13  |
+| tieredImageNet  | WRN       | 80.18  | 87.56  |
+| CUB     | ResNet-18 | 80.96  | 88.68  |
