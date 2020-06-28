@@ -61,7 +61,7 @@ sh run.sh
 You can change the commented options accordingly for each dataset.
 
 ## Results
-We get the following results for 5 different few-shot benchmarks with the following different scenarios:
+We get the following results in different few-shot benchmarks:
 
 ### On **mini-ImageNet**
  With _WRN_ network:
