@@ -60,10 +60,55 @@ sh run.sh
 ```
 You can change the commented options accordingly for each dataset.
 
-Some of our results of LaplacianShot with WRN network on mini/tiered-ImageNet and CUB dataset:
+## Results
+We get the following results for 5 different few-shot benchmarks with the following different scenarios:
 
-| Dataset | Network   | 1-shot | 5-shot |
-|---------|-----------|--------|--------|
-| miniImageNet    | WRN       | 74.86  | 84.13  |
-| tieredImageNet  | WRN       | 80.18  | 87.56  |
-| CUB     | ResNet-18 | 80.96  | 88.68  |
+### On **mini-ImageNet**
+ With _WRN_ network:
+
+| Methods  | 1-shot | 5-shot |
+|--------- |--------|--------|
+| ProtoNet (Snell et al., 2017) | 62.60   | 79.97  |
+| CC+rot (Gidaris et al., 2019)  | 62.93  | 79.87  |
+| MatchingNet (Vinyals et al., 2016)     | 64.03  | 76.32  |
+| FEAT (Ye et al., 2020)     | 65.10  | 81.11  |
+| Transductive tuning (Dhillon et al., 2020)     | 65.73 | 78.40 |
+| SimpleShot (Wang et al., 2019)     | 65.87 | 82.09 |
+| SIB (Hu et al., 2020)     | 70.0 | 79.2 |
+| BD-CSPN (Liu et al., 2019)     | 70.31 | 81.89 |
+| **LaplacianShot (ours)**     | **74.86** | **84.13** |
+
+### On **tiered-ImageNet**
+
+With _WRN_ network:
+
+| Methods  | 1-shot | 5-shot |
+|--------- |--------|--------|
+| CC+rot (Gidaris et al., 2019)  | 70.53  | 84.98  |
+| FEAT (Ye et al., 2020)     | 70.41  | 84.38  |
+| Transductive tuning (Dhillon et al., 2020)     | 73.34 | 85.50 |
+| SimpleShot (Wang et al., 2019)     | 70.90 | 85.76 |
+| BD-CSPN (Liu et al., 2019)     | 78.74 | 86.92 |
+| **LaplacianShot (ours)**     | **80.18** | **87.56** |
+
+### On **CUB**
+
+With _ResNet-18_ network
+
+| Methods  | 1-shot | 5-shot |
+|--------- |--------|--------|
+| MatchingNet (Vinyals et al., 2016)     | 73.49  | 84.45  |
+| MAML (Finn et al., 2017)     | 68.42 | 83.47 |
+| ProtoNet (Snell et al., 2017)     | 72.99 | 86.64 |
+| RelationNet (Sung et al., 2018)     | 68.58 | 84.05 |
+| Chen (Chen et al., 2019)    | 67.02 | 83.58  |
+| SimpleShot (Wang et al., 2019)    | 70.28  | 86.37  |
+| **LaplacianShot (ours)**     | **80.96** | **88.68** |
+
+### On **iNat** 
+With _WRN_ network Top-1 accuracy _Per Class_ and Top-1 accuracy _Mean_:
+
+| Methods  | Per Class | Mean |
+|--------- |--------|--------|
+| SimpleShot (Wang et al., 2019)     | 62.44 | 65.08 |
+| **LaplacianShot (ours)**     | **71.55** | **74.97** |
