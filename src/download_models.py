@@ -11,7 +11,6 @@ if __name__ == '__main__':
     print('Start Download')
     download_file_from_google_drive(id, name)
     print('Finish Download')
-    breakpoint()
     os.system('unzip models.zip')
     if not os.path.isdir('../results'):
         os.makedirs('../results')

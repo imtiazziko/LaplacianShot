@@ -550,7 +550,7 @@ def create_affinity(X, knn):
     return W
 
 def do_extract_and_evaluate(model, log):
-    # breakpoint()
+
     train_loader = get_dataloader('train', aug=False, shuffle=False, out_name=False)
     query_loader = get_dataloader('query', aug=False, shuffle=False, out_name=False)
     repr_loader = get_dataloader('repr', aug=False, shuffle=False, out_name=False)

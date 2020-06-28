@@ -453,7 +453,7 @@ def extract_feature_tune(train_loader, val_loader, model, tag='best'):
         return all_info
 
 def get_dataloader(split, aug=False, shuffle=True, out_name=False, sample=None):
-    # breakpoint()
+
     # sample: iter, way, shot, query
     if aug:
         transform = datasets.with_augment(84, disable_random_resize=args.disable_random_resize, jitter=args.jitter)
@@ -545,7 +545,7 @@ def meta_evaluate_tune(data, train_mean, shot):
 def tune_lambda(train_loader, model, log):
     val_loader = get_dataloader('val', aug=False, shuffle=False, out_name=False)
     load_checkpoint(model, 'best')
-    # breakpoint()
+
     out_mean, out_dict = extract_feature_tune(train_loader, val_loader, model, tag='best')
 
     acc_val_list_1 = []
