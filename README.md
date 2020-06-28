@@ -9,7 +9,9 @@ Imtiaz Masud Ziko, Jose Dolz, Eric Granger and Ismail Ben Ayed
 In ICML 2020.
 
 ## Introduction
-We propose LaplacianShot for few-shot learning tasks, which integrates two types of potentials: (1) unary potentials assigning query samples to the nearest class prototype, and (2) pairwise Laplacian potentials encouraging nearby query samples to have consistent predictions. Our algorithm is performed during inference in few-shot scenarios, following the traditional training of a deep convolutional network on the base classes with the cross-entropy loss. In fact, LaplacianShot can be used with any **learned feature extractor during inference**.
+We propose LaplacianShot for few-shot learning tasks, which integrates two types of potentials: (1) unary potentials assigning query samples to the nearest class prototype, and (2) pairwise Laplacian potentials encouraging nearby query samples to have consistent predictions. 
+
+LaplacianShot is utilized during inference in few-shot scenarios, following the traditional training of a deep convolutional network on the base classes with the cross-entropy loss. In fact, LaplacianShot can be used with any **learned feature extractor during inference**.
 
 ## Usage
 ### 1. Dependencies
