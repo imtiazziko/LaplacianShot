@@ -9,7 +9,7 @@ Imtiaz Masud Ziko, Jose Dolz, Eric Granger and Ismail Ben Ayed
 In ICML 2020.
 
 ## Introduction
-We propose LaplacianShot for few-shot learning tasks, which integrates two types of potentials: (1) unary potentials assigning query samples to the nearest class prototype, and (2) pairwise Laplacian potentials encouraging nearby query samples to have consistent predictions. 
+We propose LaplacianShot for few-shot learning tasks, which integrates two types of potentials: (1) assigning query samples to the nearest class prototype, and (2) pairwise Laplacian potentials encouraging nearby query samples to have consistent predictions. 
 
 LaplacianShot is utilized during inference in few-shot scenarios, following the traditional training of a deep convolutional network on the base classes with the cross-entropy loss. In fact, LaplacianShot can be used with any learned feature extractor during inference.
 
@@ -53,12 +53,14 @@ You can download our pretrained network models on base classes by running:
 cd ./src
 python download_models.py
 ```
+The downloaded trained models are then stored in the [./results]() folder according to the corresponding dataset and network models.
+
 Alternatively to train the network on the base classes from scratch remove the "--evaluate " options in the following script.
 The scripts to test LaplacianShot:
 ```angular2
 sh run.sh
 ```
-You can change the commented options accordingly for each dataset.
+You can change the commented options accordingly for each dataset. Also all the different options are fairly described in the [configuration.py](./src/utils/configuration.py) file.
 
 ## Results
 We get the following results in different few-shot benchmarks:
