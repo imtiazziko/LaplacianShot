@@ -1,10 +1,10 @@
 # LaplacianShot: Laplacian Regularized Few Shot Learning
 
-This repository contains the code for **LaplacianShot**. The code is adapted from [SimpleShot github](https://github.com/mileyan/simple_shot).
+This repository contains the code for [**LaplacianShot**](https://arxiv.org/abs/2006.15486). The code is adapted from [SimpleShot github](https://github.com/mileyan/simple_shot).
 
 If you use this code please cite the following ICML 2020 paper:
 
-[**Laplacian Regularized Few-shot Learning**]()  
+[**Laplacian Regularized Few-shot Learning**](https://arxiv.org/abs/2006.15486)  
 Imtiaz Masud Ziko, Jose Dolz, Eric Granger and Ismail Ben Ayed  
 In ICML 2020.
 
