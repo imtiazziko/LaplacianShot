@@ -21,29 +21,28 @@ In fact, LaplacianShot can be utilized during inference on top of any learned fe
 
 ### 2. Datasets
 #### 2.1 Mini-ImageNet
-You can download the dataset from [here](https://drive.google.com/open?id=0B3Irx3uQNoBMQ1FlNXJsZUdYWEE)
+You can download the dataset from [here](https://drive.google.com/open?id=0B3Irx3uQNoBMQ1FlNXJsZUdYWEE). Unpack the dataset in to [data/](./data/) directory.
 
 #### 2.2 Tiered-ImageNet
 You can download the Tiered-ImageNet from [here](https://drive.google.com/file/d/1g1aIDy2Ar_MViF2gDXFYDBTR-HYecV07/view).
-After downloading and unziping this dataset run the following script to generate split files.
+Unpack this dataset in [data/](./data/) directory. Then run the following script to generate split files.
 ```angular2
 python src/utils/tieredImagenet.py --data path-to-tiered --split split/tiered/
 ```
 #### 2.3 CUB
-Download and unpack the CUB 200-2011 from [here](http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz)
-After downloading and unziping this dataset run the following script to generate split files.
+Download and unpack the CUB 200-2011 from [here](http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz) in [data/](./data/) directory.
+Then run the following script to generate split files.
 ```angular2
 python src/utils/cub.py --data path-to-cub --split split/cub/
 ```
 #### 2.4 iNat2017
-We follow the instruction from https://github.com/daviswer/fewshotlocal. Download and unpack the iNat2017 _Training and validation images_, and the _Training bounding box annotations_, to [data/iNat](./data/iNat) directory from [here](https://github.com/visipedia/inat_comp/blob/master/2017/README.md#Data). Also download _traincatlist.pth_ and _testcatlist.pth_ in the same directory from [here](https://github.com/daviswer/fewshotlocal) and finally
- create the meta-iNat dataset by running:
+We follow the instruction from https://github.com/daviswer/fewshotlocal. Download and unpack the iNat2017 _Training and validation images_, and the _Training bounding box annotations_, to [data/iNat](./data/iNat) directory from [here](https://github.com/visipedia/inat_comp/blob/master/2017/README.md#Data). Also download _traincatlist.pth_ and _testcatlist.pth_ in the same directory from [here](https://github.com/daviswer/fewshotlocal). Then, run the following to setup the dataset:
  ```angular2
 cd ./data/iNat
 python iNat_setup.py
 ```
 
-And run the following script to generate split files.
+And run the following script to generate the split files.
 ```angular2
 python ./src/inatural_split.py --data path-to-inat/setup --split ./split/inatural/
 ```
