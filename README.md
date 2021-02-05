@@ -15,9 +15,9 @@ LaplacianShot is utilized during inference in few-shot scenarios, following the 
 In fact, LaplacianShot can be utilized during inference on top of any learned feature embeddings.
 
 ## Usage
-### 1. Dependencies
-- Python 3.6+
-- Pytorch 1.0+
+### 1. Code tested with Dependencies
+- Python 3.6
+- Pytorch 1.2
 
 ### 2. Datasets
 #### 2.1 Mini-ImageNet
