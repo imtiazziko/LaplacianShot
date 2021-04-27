@@ -21,7 +21,8 @@ def parser_args():
                         help='disable training augmentation')
     parser.add_argument('--disable-random-resize', action='store_true',
                         help='disable random resizing')
-    parser.add_argument('--jitter', default=True, type=bool, help='Image jitter added')
+    #Update. Jitter is not added in our training it is a mistake in the paper.
+    parser.add_argument('--jitter', default=False, type=bool, help='Image jitter. By default jitter is not added.')
     parser.add_argument('--enlarge', default=True, type=bool, help='enlarge the image size then center crop')
     ### network setting
     parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',

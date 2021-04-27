@@ -1,0 +1,9 @@
+sklearn
+tqdm
+scipy
+configargparse
+matplotlib
+Pillow
+requests
+opencv-python
+argparse

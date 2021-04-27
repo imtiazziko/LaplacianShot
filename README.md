@@ -18,6 +18,10 @@ In fact, LaplacianShot can be utilized during inference on top of any learned fe
 ### 1. Code tested with Dependencies
 - Python 3.6
 - Pytorch 1.2
+- Install dependencies by running:
+```angular2
+pip install -r requirements.txt
+```
 
 ### 2. Datasets
 #### 2.1 Mini-ImageNet
