@@ -21,7 +21,7 @@ def parser_args():
                         help='disable training augmentation')
     parser.add_argument('--disable-random-resize', action='store_true',
                         help='disable random resizing')
-    parser.add_argument('--jitter', default=False, type=bool, help='Image jitter')
+    parser.add_argument('--jitter', default=True, type=bool, help='Image jitter')
     parser.add_argument('--enlarge', default=True, type=bool, help='enlarge the image size then center crop')
     ### network setting
     parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
@@ -80,7 +80,7 @@ def parser_args():
                         help='path to folder stored the log and checkpoint')
     parser.add_argument('--log-file', default='/training.log', type=str,
                         help='log-file')
-    parser.add_argument('--seed', default=1, type=int,
+    parser.add_argument('--seed', default=None, type=int,
                         help='seed for initializing training. ')
     parser.add_argument('--disable-tqdm', action='store_true',
                         help='disable tqdm.')
