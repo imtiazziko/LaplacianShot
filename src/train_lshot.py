@@ -586,7 +586,8 @@ def lshot_prediction(args, knn, lmd, X, unary, support_label, test_label):
     W = create_affinity(X, knn)
     l = bound_update(args, unary, W, lmd)
     out = np.take(support_label, l)
-    acc, _ = get_accuracy(test_label, out)
+#     acc, _ = get_accuracy(test_label, out) # Update
+    acc = (out == test_label).mean()
     return acc
 
 def metric_class_type(gallery, query, support_label, test_label, shot, train_mean=None, norm_type='CL2N'):
