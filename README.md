@@ -14,6 +14,7 @@ We propose LaplacianShot for few-shot learning tasks, which integrates two types
 LaplacianShot is utilized during inference in few-shot scenarios, following the traditional training of a deep convolutional network on the base classes with the cross-entropy loss. 
 In fact, LaplacianShot can be utilized during inference on top of any learned feature embeddings.
 
+
 ## Usage
 ### 1. Code tested with Dependencies
 - Python 3.6
@@ -82,7 +83,7 @@ We get the following results in different few-shot benchmarks:
 | SimpleShot (Wang et al., 2019)     | 65.87 | 82.09 |
 | SIB (Hu et al., 2020)     | 70.0 | 79.2 |
 | BD-CSPN (Liu et al., 2019)     | 70.31 | 81.89 |
-| **LaplacianShot (ours)**     | **74.86** | **84.13** |
+| **LaplacianShot (ours)**     | **73.44** | **83.93** |
 
 ### On **tiered-ImageNet**
 
@@ -95,7 +96,7 @@ With _WRN_ network:
 | Transductive tuning (Dhillon et al., 2020)     | 73.34 | 85.50 |
 | SimpleShot (Wang et al., 2019)     | 70.90 | 85.76 |
 | BD-CSPN (Liu et al., 2019)     | 78.74 | 86.92 |
-| **LaplacianShot (ours)**     | **80.18** | **87.56** |
+| **LaplacianShot (ours)**     | **78.80** | **87.48** |
 
 ### On **CUB**
 
@@ -109,7 +110,7 @@ With _ResNet-18_ network
 | RelationNet (Sung et al., 2018)     | 68.58 | 84.05 |
 | Chen (Chen et al., 2019)    | 67.02 | 83.58  |
 | SimpleShot (Wang et al., 2019)    | 70.28  | 86.37  |
-| **LaplacianShot (ours)**     | **80.96** | **88.68** |
+| **LaplacianShot (ours)**     | **79.58** | **88.69** |
 
 ### On **iNat** 
 With _WRN_ network Top-1 accuracy _Per Class_ and Top-1 accuracy _Mean_:
