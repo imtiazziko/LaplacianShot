@@ -2,7 +2,7 @@ from utils.download import download_file_from_google_drive
 import os
 
 if __name__ == '__main__':
-    id = '1ejqq3vLYksHpUgwgsS6Q5b27m-AUe2jZ'
+    id = 'SJdn8J8L9z6aCoHMQiPLU-Ol8QFoDECu'
     name = "models.zip"
     os.chdir('../')
     if not os.path.isdir('./tmp'):

@@ -78,6 +78,8 @@ def parser_args():
                         help='path to the folder stored split files.')
     parser.add_argument('--save-path', default='result/default', type=str,
                         help='path to folder stored the log and checkpoint')
+    parser.add_argument('--ckpt-path', default='models/default', type=str,
+                        help='path to folder stored the log and checkpoint')
     parser.add_argument('--log-file', default='/training.log', type=str,
                         help='log-file')
     parser.add_argument('--seed', default=None, type=int,

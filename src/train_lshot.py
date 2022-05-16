@@ -73,8 +73,8 @@ def main():
             log.info('[Attention]: Do not find pretrained model {}'.format(pretrain))
 
     # resume from an exist checkpoint
-    if os.path.isfile(args.save_path + '/checkpoint.pth.tar') and args.resume == '':
-        args.resume = args.save_path + '/checkpoint.pth.tar'
+    if os.path.isfile(args.ckpt_path + '/checkpoint.pth.tar') and args.resume == '':
+        args.resume = args.ckpt_path + '/checkpoint.pth.tar'
 
     if args.resume:
         if os.path.isfile(args.resume):
@@ -130,7 +130,7 @@ def main():
             'state_dict': model.state_dict(),
             'best_prec1': best_prec1,
             'optimizer': optimizer.state_dict(),
-        }, is_best, folder=args.save_path)
+        }, is_best, folder=args.ckpt_path)
 
     # do evaluate at the end
     args.enlarge = True
@@ -491,9 +491,9 @@ def load_pickle(file):
 
 def load_checkpoint(model, type='best'):
     if type == 'best':
-        checkpoint = torch.load('{}/model_best.pth.tar'.format(args.save_path))
+        checkpoint = torch.load('{}/model_best.pth.tar'.format(args.ckpt_path))
     elif type == 'last':
-        checkpoint = torch.load('{}/checkpoint.pth.tar'.format(args.save_path))
+        checkpoint = torch.load('{}/checkpoint.pth.tar'.format(args.ckpt_path))
     else:
         assert False, 'type should be in [best, or last], but got {}'.format(type)
     model.load_state_dict(checkpoint['state_dict'])

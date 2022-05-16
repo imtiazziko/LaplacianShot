@@ -7,3 +7,4 @@ Pillow
 requests
 opencv-python
 argparse
+pyyaml==5.3.1

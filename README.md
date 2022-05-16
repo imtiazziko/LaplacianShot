@@ -53,12 +53,18 @@ python ./src/inatural_split.py --data path-to-inat/setup --split ./split/inatura
 ```
 
 ### 3 Train and Test
-You can download our pretrained network models on base classes by running:
-```angular2
-cd ./src
-python download_models.py
-```
-The downloaded trained models are then stored in the [./results]() folder according to the corresponding dataset and network models.
+You can download the pretrained network models from [here](https://drive.google.com/file/d/1SJdn8J8L9z6aCoHMQiPLU-Ol8QFoDECu/view?usp=sharing)
+
+[//]: # (You can download our pretrained network models on base classes by running:)
+
+[//]: # (```angular2)
+
+[//]: # (cd ./src)
+
+[//]: # (python download_models.py)
+
+[//]: # (```)
+[//]: # (The downloaded trained models are then stored in the [./results]&#40;&#41; folder according to the corresponding dataset and network models.)
 
 Alternatively to train the network on the base classes from scratch remove the "--evaluate " options in the following script.
 The scripts to test LaplacianShot:
