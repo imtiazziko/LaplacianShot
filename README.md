@@ -53,7 +53,7 @@ python ./src/inatural_split.py --data path-to-inat/setup --split ./split/inatura
 ```
 
 ### 3 Train and Test
-You can download the pretrained network models from [here](https://drive.google.com/file/d/1CG8ny7hD8i4GgjZN-Q1fU_i3smC4G6bG/view?usp=sharing)
+You can download the pretrained network models from [here](https://drive.google.com/file/d/1CG8ny7hD8i4GgjZN-Q1fU_i3smC4G6bG/view?usp=sharing).
 
 [//]: # (You can download our pretrained network models on base classes by running:)
 
